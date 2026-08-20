@@ -1,3 +1,4 @@
+
 # EduManage — Laravel 11 + Vue 3
 
 Hệ thống học tập trực tuyến, quản lý lớp học, điểm số và điểm danh bằng QR realtime.
@@ -306,3 +307,6 @@ Ví dụ mô tả PR:
 | Frontend gọi sai API | Kiểm tra `VITE_API_URL` trong `FE/.env`, rồi restart `npm run dev`. |
 | Không có realtime | Chạy thêm `php artisan reverb:start --port=8080` và kiểm tra `VITE_REVERB_*`. |
 | Port đã được sử dụng | Đổi port server hoặc tắt tiến trình đang chiếm port. |
+=======
+# 
+
