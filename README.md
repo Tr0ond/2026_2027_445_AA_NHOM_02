@@ -1,5 +1,5 @@
 
-# EduManage — Laravel 11 + Vue 3
+# EduManage — Laravel 13 + Vue 3
 
 Hệ thống học tập trực tuyến, quản lý lớp học, điểm số và điểm danh bằng QR realtime.
 
