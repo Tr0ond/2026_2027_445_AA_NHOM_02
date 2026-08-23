@@ -67,18 +67,21 @@ class DiemDanhSinhVienController extends Controller
             ], 403);
         }
 
-        $daDiemDanh = ChiTietDiemDanhModel::where('ma_phien_diem_danh', $phien->id)
+        $banGhiDiemDanh = ChiTietDiemDanhModel::where('ma_phien_diem_danh', $phien->id)
             ->where('ma_sinh_vien', $sinhVien->id)
-            ->exists();
+            ->first();
 
-        if ($daDiemDanh) {
+        if ($banGhiDiemDanh) {
+            $daXinPhep = $banGhiDiemDanh->trang_thai_diem_danh === 'vang_co_phep';
+
             return response()->json([
                 'thanh_cong' => true,
                 'da_diem_danh_truoc_do' => true,
-                'message' => 'Bạn đã điểm danh phiên này rồi.',
-                'thoi_gian_diem_danh' => $phien->chiTiet
-                    ->firstWhere('ma_sinh_vien', $sinhVien->id)
-                    ?->thoi_gian_diem_danh?->format('H:i d/m/Y'),
+                'trang_thai_diem_danh' => $banGhiDiemDanh->trang_thai_diem_danh,
+                'message' => $daXinPhep
+                    ? 'Đơn xin phép vắng đã được duyệt. Bạn không cần điểm danh buổi này.'
+                    : 'Bạn đã điểm danh phiên này rồi.',
+                'thoi_gian_diem_danh' => $banGhiDiemDanh->thoi_gian_diem_danh?->format('H:i d/m/Y'),
             ]);
         }
 
