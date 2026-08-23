@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\MaQrDiemDanhCapNhat;
 use App\Events\PhienDiemDanhDong;
 use App\Events\PhienDiemDanhMo;
 use App\Http\Controllers\Controller;
@@ -66,6 +67,28 @@ class PhienDiemDanhController extends Controller
             'trang_thai' => 'dang_mo',
         ]);
 
+        // Sinh viên đã được duyệt phép được ghi nhận ngay khi mở phiên,
+        // không phải chờ đóng phiên và không cần quét QR.
+        $sinhVienVangCoPhep = DonXinPhep::where('ma_lich_hoc', $lichHoc->id)
+            ->where('trang_thai', 'duoc_duyet')
+            ->pluck('ma_sinh_vien')
+            ->unique()
+            ->values();
+
+        foreach ($sinhVienVangCoPhep as $maSinhVien) {
+            ChiTietDiemDanh::updateOrCreate(
+                [
+                    'ma_phien_diem_danh' => $phien->id,
+                    'ma_sinh_vien' => $maSinhVien,
+                ],
+                [
+                    'trang_thai_diem_danh' => 'vang_co_phep',
+                    'thoi_gian_diem_danh' => null,
+                    'hinh_thuc_diem_danh' => 'sua_thu_cong',
+                ],
+            );
+        }
+
         $qrToken = $this->taoQrToken($phien);
         $duongDanQr = $this->duongDanQr($qrToken->token);
 
@@ -82,6 +105,7 @@ class PhienDiemDanhController extends Controller
                 $batDau->toIso8601String(),
                 $ketThuc->toIso8601String(),
                 $soPhut * 60,
+                $sinhVienVangCoPhep->all(),
             ));
         }
 
@@ -91,11 +115,14 @@ class PhienDiemDanhController extends Controller
             ->get();
         foreach ($sinhViens as $dangKy) {
             if ($dangKy->sinhVien?->ma_tai_khoan) {
+                $daDuocPhepVang = $sinhVienVangCoPhep->contains($dangKy->ma_sinh_vien);
                 app(ThongBaoService::class)->tao(
                     $dangKy->sinhVien->ma_tai_khoan,
                     'phien_diem_danh',
-                    'Đã mở phiên điểm danh',
-                    "Giảng viên đã mở điểm danh môn {$lichHoc->lopHoc?->monHoc?->ten_mon}.",
+                    $daDuocPhepVang ? 'Đã ghi nhận vắng có phép' : 'Đã mở phiên điểm danh',
+                    $daDuocPhepVang
+                        ? "Bạn đã được duyệt phép vắng môn {$lichHoc->lopHoc?->monHoc?->ten_mon} và không cần quét QR."
+                        : "Giảng viên đã mở điểm danh môn {$lichHoc->lopHoc?->monHoc?->ten_mon}.",
                     [
                         'ma_phien' => $phien->ma_phien,
                         'ma_lich_hoc' => $lichHoc->id,
@@ -121,7 +148,7 @@ class PhienDiemDanhController extends Controller
         ], 201);
     }
 
-    /** Sinh QR token mới cho màn hình giảng viên; token chỉ sống 10 giây. */
+    /** Sinh QR token mới và đồng bộ cho mọi thành viên trong phòng; token chỉ sống 10 giây. */
     public function tokenQr(Request $request, PhienDiemDanh $phien): JsonResponse
     {
         $phien->loadMissing('lichHoc.lopHoc');
@@ -142,10 +169,24 @@ class PhienDiemDanhController extends Controller
         }
 
         $qrToken = $this->taoQrToken($phien);
+        $duongDanQr = $this->duongDanQr($qrToken->token);
+
+        $phong = PhongHocTrucTuyen::where('ma_lich_hoc', $phien->ma_lich_hoc)
+            ->where('trang_thai', 'dang_dien_ra')
+            ->first();
+
+        if ($phong) {
+            broadcast(new MaQrDiemDanhCapNhat(
+                $phong->ma_phong,
+                $phien->ma_phien,
+                $duongDanQr,
+                $qrToken->het_han_luc->toIso8601String(),
+            ));
+        }
 
         return response()->json([
             'qr_token' => $qrToken->token,
-            'duong_dan_qr' => $this->duongDanQr($qrToken->token),
+            'duong_dan_qr' => $duongDanQr,
             'qr_het_han_luc' => $qrToken->het_han_luc->toIso8601String(),
         ]);
     }
