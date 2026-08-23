@@ -64,9 +64,9 @@
           <div class="grid grid-cols-2 gap-3">
             <div v-for="info in thongTinBuoiChon" :key="info.nhan" class="bg-slate-50 rounded-xl p-3"><p class="text-xs text-slate-500 flex items-center gap-1.5 mb-1.5"><i :class="info.icon"></i>{{ info.nhan }}</p><p class="text-sm font-bold text-slate-800">{{ info.giaTri }}</p></div>
           </div>
-          <div v-if="buoiChon.co_hoc_truc_tuyen" class="flex gap-3">
-            <button v-if="buoiChon.phong_truc_tuyen?.ma_phong" class="flex-1 flex items-center justify-center gap-2 py-3 bg-brand-600 text-white text-sm font-bold rounded-xl hover:bg-brand-700" @click="vaoPhong(buoiChon)"><i class="fa-solid fa-video"></i>Vào phòng học</button>
-            <button class="flex-1 flex items-center justify-center gap-2 py-3 bg-slate-100 text-slate-700 text-sm font-medium rounded-xl hover:bg-slate-200"><i class="fa-solid fa-qrcode"></i>Điểm danh QR</button>
+          <div v-if="buoiChon.co_hoc_truc_tuyen" class="flex items-center gap-3 rounded-xl bg-brand-50 px-4 py-3 text-sm text-brand-700">
+            <i class="fa-solid fa-qrcode"></i>
+            <span>Quét mã QR do giảng viên cung cấp để điểm danh buổi học.</span>
           </div>
           <div v-else class="flex items-center gap-3 bg-slate-50 rounded-xl px-4 py-3 text-sm text-slate-600"><i class="fa-solid fa-location-dot text-slate-400"></i><span>Học tại phòng <strong>{{ buoiChon.phong_hoc || '—' }}</strong> – đến trực tiếp</span></div>
         </div>
@@ -229,7 +229,6 @@ export default {
     },
     dinhDangNgayString(n) { return new Date(n).toLocaleDateString('vi-VN') },
     tenThuDayDu(n) { return new Date(n).toLocaleDateString('vi-VN', { weekday: 'long' }) },
-    vaoPhong(b) { this.buoiChon = null; this.$router.push({ name: 'phong-hoc', params: { maPhong: b.phong_truc_tuyen.ma_phong } }) },
   },
 }
 </script>
