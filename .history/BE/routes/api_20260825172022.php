@@ -7,8 +7,6 @@ use App\Http\Controllers\Api\LopDayController;
 use App\Http\Controllers\Api\LopHocController;
 use App\Http\Controllers\Api\PhienDiemDanhController;
 use App\Http\Controllers\Api\QuanLyDiemDanhController;
-use App\Http\Controllers\Api\DiemController;
-use App\Http\Controllers\Api\DonXinPhepController;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
 
@@ -30,7 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Lịch học của người dùng đang đăng nhập.
     Route::get('/lich-hoc', [LichHocController::class, 'index']);
 
-    // Sinh viên: lớp học, đăng ký lớp, điểm danh và xem điểm.
+    // Sinh viên: lớp học, đăng ký lớp và điểm danh.
     Route::middleware('vai_tro:sinh_vien')->prefix('sinh-vien')->group(function () {
         Route::get('/lop-hoc-mo', [LopHocController::class, 'danhSachMo']);
         Route::get('/lop-cua-toi', [LopHocController::class, 'lopCuaToi']);
@@ -39,19 +37,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::post('/diem-danh/qr/{maQr}', [DiemDanhSinhVienController::class, 'quetQr']);
         Route::get('/lich-su-diem-danh', [DiemDanhSinhVienController::class, 'lichSu']);
-
-        // Quản lý điểm
-        Route::get('/diem', [DiemController::class, 'index']);
-        Route::get('/diem/lop-hoc/{ma_lop_hoc}', [DiemController::class, 'showByClass']);
-
-        // Quản lý đơn xin nghỉ
-        Route::get('/don-xin-phep', [DonXinPhepController::class, 'index']);
-        Route::post('/don-xin-phep', [DonXinPhepController::class, 'store']);
-        Route::get('/don-xin-phep/{id}', [DonXinPhepController::class, 'show']);
-        Route::delete('/don-xin-phep/{id}', [DonXinPhepController::class, 'destroy']);
     });
 
-    // Giảng viên: lớp phụ trách, lịch dạy, điểm danh, quản lý điểm và đơn xin nghỉ.
+    // Giảng viên: lớp phụ trách, lịch dạy và điều chỉnh điểm danh.
     Route::middleware('vai_tro:giang_vien')->group(function () {
         Route::get('/lop-day', [LopDayController::class, 'index']);
         Route::get('/lop-day/buoi-hoc', [LopDayController::class, 'buoiHoc']);
@@ -61,17 +49,6 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/lich-hoc/{lichHoc}', [QuanLyDiemDanhController::class, 'show']);
             Route::put('/lich-hoc/{lichHoc}', [QuanLyDiemDanhController::class, 'update']);
         });
-
-        // Quản lý điểm
-        Route::post('/diem', [DiemController::class, 'storeOrUpdate']);
-        Route::post('/diem/bulk', [DiemController::class, 'storeBulk']);
-        Route::get('/diem/lop-hoc/{ma_lop_hoc}', [DiemController::class, 'showClassGrades']);
-
-        // Quản lý đơn xin nghỉ
-        Route::get('/don-xin-phep/lop-hoc', [DonXinPhepController::class, 'danhSachTheoLop']);
-        Route::post('/don-xin-phep/{id}/duyet', [DonXinPhepController::class, 'duyet']);
-        Route::post('/don-xin-phep/{id}/tu-choi', [DonXinPhepController::class, 'tuChoi']);
-        Route::post('/don-xin-phep/xu-ly-hang-loat', [DonXinPhepController::class, 'xuLyHangLoat']);
     });
 
     // Giảng viên hoặc admin: quản lý phiên QR.
