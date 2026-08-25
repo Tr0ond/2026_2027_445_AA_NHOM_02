@@ -15,6 +15,8 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
+    'fe_url' => env('FE_URL', 'http://localhost:5173'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment
@@ -65,7 +67,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => 'Asia/Ho_Chi_Minh',
 
     /*
     |--------------------------------------------------------------------------
