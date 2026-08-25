@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class DiemSinhVien extends Model
 {
+    use HasFactory;
+    
     protected $table = 'diem_sinh_vien';
 
     protected $fillable = ['ma_sinh_vien', 'ma_thanh_phan', 'diem'];
