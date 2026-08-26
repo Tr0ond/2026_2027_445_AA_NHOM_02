@@ -23,7 +23,8 @@
       </div>
     </div>
 
-    <div v-if="thongBao" class="mb-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-2.5 text-sm">
+    <div v-if="thongBao"
+         class="mb-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-2.5 text-sm">
       <i class="fa-solid fa-circle-check mr-2"></i>{{ thongBao }}
     </div>
     <div v-if="loi" class="mb-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 px-4 py-2.5 text-sm">
@@ -44,7 +45,8 @@
         <option value="tu_choi">Từ chối</option>
       </select>
       <div v-if="danhSachLoc.length > 0" class="flex items-center gap-2 ml-auto">
-        <input v-model="xuLyHangLoat" type="checkbox" id="xuLyHangLoat" class="rounded border-slate-300 text-brand-600 focus:ring-brand-500">
+        <input v-model="xuLyHangLoat" type="checkbox" id="xuLyHangLoat"
+               class="rounded border-slate-300 text-brand-600 focus:ring-brand-500">
         <label for="xuLyHangLoat" class="text-sm text-slate-600">Xử lý hàng loạt</label>
       </div>
     </div>
@@ -53,65 +55,69 @@
       <div class="overflow-x-auto">
         <table class="bang">
           <thead>
-            <tr>
-              <th v-if="xuLyHangLoat">
-                <input v-model="chonTatCa" type="checkbox" class="rounded border-slate-300 text-brand-600 focus:ring-brand-500">
-              </th>
-              <th>Sinh viên</th>
-              <th>Môn học</th>
-              <th>Ngày nghỉ</th>
-              <th>Lý do</th>
-              <th>Trạng thái</th>
-              <th>Thao tác</th>
-            </tr>
+          <tr>
+            <th v-if="xuLyHangLoat">
+              <input v-model="chonTatCa" type="checkbox"
+                     class="rounded border-slate-300 text-brand-600 focus:ring-brand-500">
+            </th>
+            <th>Sinh viên</th>
+            <th>Môn học</th>
+            <th>Ngày nghỉ</th>
+            <th>Lý do</th>
+            <th>Trạng thái</th>
+            <th>Thao tác</th>
+          </tr>
           </thead>
           <tbody>
-            <tr v-for="don in danhSachLoc" :key="don.id">
-              <td v-if="xuLyHangLoat">
-                <input v-model="don.chon" type="checkbox" class="rounded border-slate-300 text-brand-600 focus:ring-brand-500">
-              </td>
-              <td>
-                <div class="flex items-center gap-2.5">
-                  <div class="w-7 h-7 rounded-lg bg-brand-100 text-brand-600 flex items-center justify-center">
-                    <i class="fa-solid fa-user text-xs"></i>
-                  </div>
-                  <div>
-                    <span class="font-semibold text-slate-800">{{ don.sinh_vien?.ho_ten }}</span>
-                    <p class="text-xs text-slate-400">{{ don.sinh_vien?.ma_sinh_vien }}</p>
-                  </div>
+          <tr v-for="don in danhSachLoc" :key="don.id">
+            <td v-if="xuLyHangLoat">
+              <input v-model="don.chon" type="checkbox"
+                     class="rounded border-slate-300 text-brand-600 focus:ring-brand-500">
+            </td>
+            <td>
+              <div class="flex items-center gap-2.5">
+                <div class="w-7 h-7 rounded-lg bg-brand-100 text-brand-600 flex items-center justify-center">
+                  <i class="fa-solid fa-user text-xs"></i>
                 </div>
-              </td>
-              <td>{{ don.lop_hoc?.mon_hoc?.ten_mon }}</td>
-              <td>
-                <p class="font-mono text-xs font-semibold text-slate-800">{{ dinhDangNgay(don.ngay_nghi) }}</p>
-              </td>
-              <td>
-                <p class="text-sm text-slate-600 line-clamp-2 max-w-[200px]">{{ don.ly_do }}</p>
-              </td>
-              <td>
+                <div>
+                  <span class="font-semibold text-slate-800">{{ don.sinh_vien?.ho_ten }}</span>
+                  <p class="text-xs text-slate-400">{{ don.sinh_vien?.ma_sinh_vien }}</p>
+                </div>
+              </div>
+            </td>
+            <td>{{ don.lop_hoc?.mon_hoc?.ten_mon }}</td>
+            <td>
+              <p class="font-mono text-xs font-semibold text-slate-800">{{ dinhDangNgay(don.ngay_nghi) }}</p>
+            </td>
+            <td>
+              <p class="text-sm text-slate-600 line-clamp-2 max-w-[200px]">{{ don.ly_do }}</p>
+            </td>
+            <td>
                 <span class="nhan border !py-0.5" :class="mauTrangThai(don.trang_thai)">
                   <span class="w-1.5 h-1.5 rounded-full" :class="mauCham(don.trang_thai)"></span>
                   {{ tenTrangThai(don.trang_thai) }}
                 </span>
-              </td>
-              <td>
-                <div v-if="!xuLyHangLoat" class="flex items-center gap-2">
-                  <button v-if="don.trang_thai === 'cho_duyet'" class="text-emerald-600 hover:text-emerald-700 text-sm font-medium" @click="duyetDon(don)">
-                    <i class="fa-solid fa-check mr-1"></i>Duyệt
-                  </button>
-                  <button v-if="don.trang_thai === 'cho_duyet'" class="text-rose-600 hover:text-rose-700 text-sm font-medium" @click="moModalTuChoi(don)">
-                    <i class="fa-solid fa-xmark mr-1"></i>Từ chối
-                  </button>
-                  <button v-else class="text-slate-400 text-sm font-medium cursor-not-allowed" disabled>
-                    —
-                  </button>
-                </div>
-              </td>
-            </tr>
+            </td>
+            <td>
+              <div v-if="!xuLyHangLoat" class="flex items-center gap-2">
+                <button v-if="don.trang_thai === 'cho_duyet'"
+                        class="text-emerald-600 hover:text-emerald-700 text-sm font-medium" @click="duyetDon(don)">
+                  <i class="fa-solid fa-check mr-1"></i>Duyệt
+                </button>
+                <button v-if="don.trang_thai === 'cho_duyet'"
+                        class="text-rose-600 hover:text-rose-700 text-sm font-medium" @click="moModalTuChoi(don)">
+                  <i class="fa-solid fa-xmark mr-1"></i>Từ chối
+                </button>
+                <button v-else class="text-slate-400 text-sm font-medium cursor-not-allowed" disabled>
+                  —
+                </button>
+              </div>
+            </td>
+          </tr>
           </tbody>
         </table>
       </div>
-      
+
       <div v-if="xuLyHangLoat && soDonChon > 0" class="flex items-center gap-3 p-4 border-t border-slate-100">
         <span class="text-sm text-slate-600">Đã chọn {{ soDonChon }} đơn</span>
         <button class="nut-chinh" @click="xuLyHangLoatDuyet" :disabled="dangXuLy">
@@ -136,7 +142,8 @@
     </div>
 
     <!-- Modal từ chối đơn -->
-    <div v-if="hienModalTuChoi" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="hienModalTuChoi = false">
+    <div v-if="hienModalTuChoi" class="fixed inset-0 z-50 flex items-center justify-center p-4"
+         @click.self="hienModalTuChoi = false">
       <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
       <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
         <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
@@ -148,7 +155,8 @@
         <div class="p-5">
           <div class="mb-4">
             <label class="block text-sm font-medium text-slate-700 mb-1.5">Lý do từ chối</label>
-            <textarea v-model="lyDoTuChoi" class="o-nhap" rows="3" maxlength="500" placeholder="Nhập lý do từ chối..."></textarea>
+            <textarea v-model="lyDoTuChoi" class="o-nhap" rows="3" maxlength="500"
+                      placeholder="Nhập lý do từ chối..."></textarea>
             <p class="text-xs text-slate-400 mt-1">{{ lyDoTuChoi.length }}/500 ký tự</p>
           </div>
           <div class="flex items-center gap-3">
@@ -205,10 +213,30 @@ export default {
     },
     thongKe() {
       return [
-        { icon: 'fa-solid fa-file-lines', nen: 'bg-brand-50 text-brand-600', nhan: 'Tổng đơn', giaTri: this.danhSach.length },
-        { icon: 'fa-solid fa-clock', nen: 'bg-amber-50 text-amber-600', nhan: 'Chờ duyệt', giaTri: this.danhSach.filter((d) => d.trang_thai === 'cho_duyet').length },
-        { icon: 'fa-solid fa-circle-check', nen: 'bg-emerald-50 text-emerald-600', nhan: 'Đã duyệt', giaTri: this.danhSach.filter((d) => d.trang_thai === 'da_duyet').length },
-        { icon: 'fa-solid fa-circle-xmark', nen: 'bg-rose-50 text-rose-600', nhan: 'Từ chối', giaTri: this.danhSach.filter((d) => d.trang_thai === 'tu_choi').length },
+        {
+          icon: 'fa-solid fa-file-lines',
+          nen: 'bg-brand-50 text-brand-600',
+          nhan: 'Tổng đơn',
+          giaTri: this.danhSach.length
+        },
+        {
+          icon: 'fa-solid fa-clock',
+          nen: 'bg-amber-50 text-amber-600',
+          nhan: 'Chờ duyệt',
+          giaTri: this.danhSach.filter((d) => d.trang_thai === 'cho_duyet').length
+        },
+        {
+          icon: 'fa-solid fa-circle-check',
+          nen: 'bg-emerald-50 text-emerald-600',
+          nhan: 'Đã duyệt',
+          giaTri: this.danhSach.filter((d) => d.trang_thai === 'da_duyet').length
+        },
+        {
+          icon: 'fa-solid fa-circle-xmark',
+          nen: 'bg-rose-50 text-rose-600',
+          nhan: 'Từ chối',
+          giaTri: this.danhSach.filter((d) => d.trang_thai === 'tu_choi').length
+        },
       ]
     }
   },
@@ -218,7 +246,7 @@ export default {
   methods: {
     async taiDanhSachLop() {
       try {
-        const { data } = await api.get('/lop-day')
+        const {data} = await api.get('/lop-day')
         this.danhSachLop = data.data || []
       } catch (e) {
         console.error('Lỗi khi tải danh sách lớp:', e)
@@ -232,10 +260,10 @@ export default {
       }
 
       try {
-        const { data } = await api.get('/don-xin-phep/lop-hoc', {
-          params: { ma_lop_hoc: this.lopChon }
+        const {data} = await api.get('/don-xin-phep/lop-hoc', {
+          params: {ma_lop_hoc: this.lopChon}
         })
-        this.danhSach = (data.data || []).map(d => ({ ...d, chon: false }))
+        this.danhSach = (data.data || []).map(d => ({...d, chon: false}))
       } catch (e) {
         console.error('Lỗi khi tải đơn:', e)
         this.loi = e.response?.data?.message || 'Không tải được danh sách đơn.'
@@ -248,7 +276,7 @@ export default {
       this.thongBao = ''
       this.loi = ''
       try {
-        const { data } = await api.post(`/don-xin-phep/${don.id}/duyet`)
+        const {data} = await api.post(`/don-xin-phep/${don.id}/duyet`)
         this.thongBao = data.message
         await this.taiDonTheoLop()
       } catch (e) {
@@ -278,7 +306,7 @@ export default {
         if (this.laHangLoat) {
           await this.xuLyHangLoatTuChoi()
         } else {
-          const { data } = await api.post(`/don-xin-phep/${this.donTuChoi.id}/tu-choi`, {
+          const {data} = await api.post(`/don-xin-phep/${this.donTuChoi.id}/tu-choi`, {
             ly_do_tu_choi: this.lyDoTuChoi
           })
           this.thongBao = data.message
@@ -303,7 +331,7 @@ export default {
       this.thongBao = ''
       this.loi = ''
       try {
-        const { data } = await api.post('/don-xin-phep/xu-ly-hang-loat', {
+        const {data} = await api.post('/don-xin-phep/xu-ly-hang-loat', {
           ma_don: donsChon.map(d => d.id),
           hanh_dong: 'duyet'
         })
@@ -328,7 +356,7 @@ export default {
       this.thongBao = ''
       this.loi = ''
       try {
-        const { data } = await api.post('/don-xin-phep/xu-ly-hang-loat', {
+        const {data} = await api.post('/don-xin-phep/xu-ly-hang-loat', {
           ma_don: donsChon.map(d => d.id),
           hanh_dong: 'tu_choi',
           ly_do_tu_choi: this.lyDoTuChoi
@@ -345,10 +373,10 @@ export default {
       }
     },
     dinhDangNgay(n) {
-      return new Date(n).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+      return new Date(n).toLocaleDateString('vi-VN', {day: '2-digit', month: '2-digit', year: 'numeric'})
     },
     tenTrangThai(t) {
-      return { cho_duyet: 'Chờ duyệt', da_duyet: 'Đã duyệt', tu_choi: 'Từ chối' }[t] || t
+      return {cho_duyet: 'Chờ duyệt', da_duyet: 'Đã duyệt', tu_choi: 'Từ chối'}[t] || t
     },
     mauTrangThai(t) {
       return {
@@ -358,7 +386,7 @@ export default {
       }[t] || 'bg-slate-100 text-slate-600 border-slate-200'
     },
     mauCham(t) {
-      return { cho_duyet: 'bg-amber-500', da_duyet: 'bg-emerald-500', tu_choi: 'bg-rose-500' }[t] || 'bg-slate-400'
+      return {cho_duyet: 'bg-amber-500', da_duyet: 'bg-emerald-500', tu_choi: 'bg-rose-500'}[t] || 'bg-slate-400'
     }
   }
 }
