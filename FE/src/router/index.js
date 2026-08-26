@@ -41,6 +41,18 @@ const routes = [
     component: () => import('../views/sinh-vien/lich-su-diem-danh.vue'),
     meta: { layout: 'default', vai_tro: 'sinh_vien' },
   },
+  {
+    path: '/sinh-vien/xem-diem',
+    name: 'xem-diem',
+    component: () => import('../views/sinh-vien/xem-diem.vue'),
+    meta: { layout: 'default', vai_tro: 'sinh_vien' },
+  },
+  {
+    path: '/sinh-vien/don-xin-phep',
+    name: 'don-xin-phep',
+    component: () => import('../views/sinh-vien/don-xin-phep.vue'),
+    meta: { layout: 'default', vai_tro: 'sinh_vien' },
+  },
 
   // MVP giảng viên: lịch dạy và quản lý phiên/danh sách điểm danh.
   {
@@ -53,6 +65,18 @@ const routes = [
     path: '/giang-vien/diem-danh',
     name: 'gv-quan-ly-diem-danh',
     component: () => import('../views/giang-vien/quan-ly-diem-danh.vue'),
+    meta: { layout: 'admin', vai_tro: 'giang_vien' },
+  },
+  {
+    path: '/giang-vien/quan-ly-diem',
+    name: 'gv-quan-ly-diem',
+    component: () => import('../views/giang-vien/quan-ly-diem.vue'),
+    meta: { layout: 'admin', vai_tro: 'giang_vien' },
+  },
+  {
+    path: '/giang-vien/quan-ly-don-xin-phep',
+    name: 'gv-quan-ly-don-xin-phep',
+    component: () => import('../views/giang-vien/quan-ly-don-xin-phep.vue'),
     meta: { layout: 'admin', vai_tro: 'giang_vien' },
   },
 

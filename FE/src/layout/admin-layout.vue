@@ -66,6 +66,8 @@ export default {
       menu: [
         { ten: 'Lịch giảng dạy', route: 'giang-vien-trang-chu', icon: 'fa-solid fa-calendar-week' },
         { ten: 'Quản lý điểm danh', route: 'gv-quan-ly-diem-danh', icon: 'fa-solid fa-clipboard-user' },
+        { ten: 'Quản lý điểm', route: 'gv-quan-ly-diem', icon: 'fa-solid fa-pen-to-square' },
+        { ten: 'Đơn xin phép', route: 'gv-quan-ly-don-xin-phep', icon: 'fa-solid fa-file-lines' },
       ],
     }
   },

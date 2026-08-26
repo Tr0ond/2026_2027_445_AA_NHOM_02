@@ -28,7 +28,7 @@ class DonXinPhepController extends Controller
         $validated = $request->validate([
             'ma_lop_hoc' => 'required|exists:lop_hoc,id',
             'ma_lich_hoc' => 'required|exists:lich_hoc,id',
-            'ngay_nghi' => 'required|date|after:today',
+            'ngay_nghi' => 'required|date',
             'ly_do' => 'required|string|max:500',
         ]);
 
@@ -43,7 +43,7 @@ class DonXinPhepController extends Controller
             ->where('ma_lop_hoc', $validated['ma_lop_hoc'])
             ->where('trang_thai', '!=', 'huy')
             ->first();
-        
+
         if (!$dangKy) {
             return response()->json(['message' => 'Bạn không đăng ký lớp học này'], 400);
         }
@@ -52,7 +52,7 @@ class DonXinPhepController extends Controller
         $lichHoc = LichHoc::where('id', $validated['ma_lich_hoc'])
             ->where('ma_lop_hoc', $validated['ma_lop_hoc'])
             ->first();
-        
+
         if (!$lichHoc) {
             return response()->json(['message' => 'Lịch học không thuộc lớp học này'], 400);
         }
@@ -67,7 +67,7 @@ class DonXinPhepController extends Controller
             ->where('ma_lich_hoc', $validated['ma_lich_hoc'])
             ->whereIn('trang_thai', ['cho_duyet', 'da_duyet'])
             ->first();
-        
+
         if ($donTonTai) {
             return response()->json(['message' => 'Bạn đã có đơn xin nghỉ cho buổi học này'], 400);
         }
@@ -82,7 +82,7 @@ class DonXinPhepController extends Controller
                 'ly_do' => $validated['ly_do'],
                 'trang_thai' => 'cho_duyet',
             ]);
-            
+
             DB::commit();
             return response()->json(['message' => 'Đơn xin nghỉ đã được gửi', 'data' => $don->load(['sinhVien', 'lopHoc', 'lichHoc'])], 201);
         } catch (\Exception $e) {
@@ -206,7 +206,7 @@ class DonXinPhepController extends Controller
         $phanCong = PhanCongGiangDay::where('ma_giang_vien', $giangVien->id)
             ->where('ma_lop_hoc', $validated['ma_lop_hoc'])
             ->first();
-        
+
         if (!$phanCong) {
             return response()->json(['message' => 'Bạn không phụ trách lớp học này'], 403);
         }
@@ -252,7 +252,7 @@ class DonXinPhepController extends Controller
         $phanCong = PhanCongGiangDay::where('ma_giang_vien', $giangVien->id)
             ->where('ma_lop_hoc', $don->ma_lop_hoc)
             ->first();
-        
+
         if (!$phanCong) {
             return response()->json(['message' => 'Bạn không phụ trách lớp học này'], 403);
         }
@@ -264,7 +264,7 @@ class DonXinPhepController extends Controller
                 'nguoi_duyet' => $user->id,
                 'thoi_gian_duyet' => now(),
             ]);
-            
+
             DB::commit();
             return response()->json(['message' => 'Đã duyệt đơn xin nghỉ', 'data' => $don->load(['sinhVien', 'lopHoc', 'lichHoc', 'nguoiDuyet'])], 200);
         } catch (\Exception $e) {
@@ -305,7 +305,7 @@ class DonXinPhepController extends Controller
         $phanCong = PhanCongGiangDay::where('ma_giang_vien', $giangVien->id)
             ->where('ma_lop_hoc', $don->ma_lop_hoc)
             ->first();
-        
+
         if (!$phanCong) {
             return response()->json(['message' => 'Bạn không phụ trách lớp học này'], 403);
         }
@@ -317,13 +317,13 @@ class DonXinPhepController extends Controller
                 'nguoi_duyet' => $user->id,
                 'thoi_gian_duyet' => now(),
             ]);
-            
+
             // Lưu lý do từ chối vào ly_do (có thể thêm trường riêng nếu cần)
             if (isset($validated['ly_do_tu_choi'])) {
                 $don->ly_do = $don->ly_do . ' [Lý do từ chối: ' . $validated['ly_do_tu_choi'] . ']';
                 $don->save();
             }
-            
+
             DB::commit();
             return response()->json(['message' => 'Đã từ chối đơn xin nghỉ', 'data' => $don->load(['sinhVien', 'lopHoc', 'lichHoc', 'nguoiDuyet'])], 200);
         } catch (\Exception $e) {
@@ -381,7 +381,7 @@ class DonXinPhepController extends Controller
                 $phanCong = PhanCongGiangDay::where('ma_giang_vien', $giangVien->id)
                     ->where('ma_lop_hoc', $don->ma_lop_hoc)
                     ->first();
-                
+
                 if (!$phanCong) {
                     $results[] = [
                         'ma_don' => $donId,
@@ -409,7 +409,7 @@ class DonXinPhepController extends Controller
                     'data' => $don
                 ];
             }
-            
+
             DB::commit();
             return response()->json(['message' => 'Đã xử lý hàng loạt', 'data' => $results], 200);
         } catch (\Exception $e) {

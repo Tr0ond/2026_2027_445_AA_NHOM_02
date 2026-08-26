@@ -71,6 +71,8 @@ export default {
         { ten: 'Lịch học', route: 'sinh-vien-lich-hoc', icon: 'fa-solid fa-calendar-week' },
         { ten: 'Đăng ký lớp', route: 'dang-ky-lop', icon: 'fa-solid fa-book-open' },
         { ten: 'Điểm danh', route: 'lich-su-diem-danh', icon: 'fa-solid fa-clipboard-check' },
+        { ten: 'Kết quả học tập', route: 'xem-diem', icon: 'fa-solid fa-chart-line' },
+        { ten: 'Đơn xin phép', route: 'don-xin-phep', icon: 'fa-solid fa-file-signature' },
       ],
     }
   },
