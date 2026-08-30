@@ -41,12 +41,36 @@ const routes = [
     component: () => import('../views/sinh-vien/lich-su-diem-danh.vue'),
     meta: { layout: 'default', vai_tro: 'sinh_vien' },
   },
+  {
+    path: '/sinh-vien/xin-phep',
+    name: 'xin-phep-vang',
+    component: () => import('../views/sinh-vien/xin-phep-vang.vue'),
+    meta: { layout: 'default', vai_tro: 'sinh_vien' },
+  },
+  {
+    path: '/sinh-vien/diem',
+    name: 'diem-cua-toi',
+    component: () => import('../views/sinh-vien/diem-cua-toi.vue'),
+    meta: { layout: 'default', vai_tro: 'sinh_vien' },
+  },
 
   // MVP giảng viên: lịch dạy và quản lý phiên/danh sách điểm danh.
   {
     path: '/giang-vien',
     name: 'giang-vien-trang-chu',
     component: () => import('../views/giang-vien/lich-day.vue'),
+    meta: { layout: 'admin', vai_tro: 'giang_vien' },
+  },
+  {
+    path: '/giang-vien/xin-phep',
+    name: 'gv-xin-phep',
+    component: () => import('../views/giang-vien/xin-phep.vue'),
+    meta: { layout: 'admin', vai_tro: 'giang_vien' },
+  },
+  {
+    path: '/giang-vien/diem',
+    name: 'gv-quan-ly-diem',
+    component: () => import('../views/giang-vien/quan-ly-diem.vue'),
     meta: { layout: 'admin', vai_tro: 'giang_vien' },
   },
   {

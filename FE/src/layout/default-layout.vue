@@ -69,8 +69,10 @@ export default {
       moMenu: false,
       menu: [
         { ten: 'Lịch học', route: 'sinh-vien-lich-hoc', icon: 'fa-solid fa-calendar-week' },
+        { ten: 'Điểm số', route: 'diem-cua-toi', icon: 'fa-solid fa-chart-bar' },
         { ten: 'Đăng ký lớp', route: 'dang-ky-lop', icon: 'fa-solid fa-book-open' },
         { ten: 'Điểm danh', route: 'lich-su-diem-danh', icon: 'fa-solid fa-clipboard-check' },
+        { ten: 'Xin phép vắng', route: 'xin-phep-vang', icon: 'fa-solid fa-file-pen' },
       ],
     }
   },
