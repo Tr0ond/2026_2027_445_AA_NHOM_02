@@ -9,15 +9,17 @@ use App\Http\Controllers\Api\LichHocController;
 use App\Http\Controllers\Api\LopDayController;
 use App\Http\Controllers\Api\LopHocController;
 use App\Http\Controllers\Api\PhienDiemDanhController;
+use App\Http\Controllers\Api\PhongHocController;
 use App\Http\Controllers\Api\QuanLyDiemDanhController;
+use App\Http\Controllers\Api\TinNhanPhongController;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| API Routes - MVP + điểm học tập và đơn xin phép
+| API Routes - MVP + điểm học tập, đơn xin phép và phòng học trực tuyến
 |--------------------------------------------------------------------------
-| Giữ nguyên API cốt lõi trên main và chỉ bổ sung phạm vi của Huỳnh Gia Pho.
+| Giữ API đã tích hợp; phần Cường chỉ bổ sung nhóm /phong.
 */
 
 Broadcast::routes(['middleware' => ['auth:sanctum']]);
@@ -48,6 +50,24 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/diem-danh/qr/{maQr}', [DiemDanhSinhVienController::class, 'quetQr']);
         Route::get('/lich-su-diem-danh', [DiemDanhSinhVienController::class, 'lichSu']);
         Route::get('/diem', [DiemHocTapController::class, 'diemCuaToi']);
+    });
+
+    // Cường: phòng học trực tuyến, Agora và tương tác realtime.
+    Route::prefix('phong')->middleware('vai_tro:giang_vien,sinh_vien,admin')->group(function () {
+        Route::post('/bat-dau', [PhongHocController::class, 'batDau'])
+            ->middleware('vai_tro:giang_vien');
+        Route::post('/{maPhong}/tham-gia', [PhongHocController::class, 'thamGia']);
+        Route::post('/{maPhong}/roi', [PhongHocController::class, 'roiPhong']);
+        Route::get('/{maPhong}/thanh-vien', [PhongHocController::class, 'thanhVien']);
+        Route::post('/{maPhong}/ket-thuc', [PhongHocController::class, 'ketThuc'])
+            ->middleware('vai_tro:giang_vien,admin');
+        Route::get('/{maPhong}/tin-nhan', [TinNhanPhongController::class, 'index']);
+        Route::post('/{maPhong}/tin-nhan', [TinNhanPhongController::class, 'store']);
+        Route::post('/{maPhong}/gio-tay', [PhongHocController::class, 'gioTay'])
+            ->middleware('vai_tro:sinh_vien');
+        Route::post('/{maPhong}/cap-quyen', [PhongHocController::class, 'capQuyen'])
+            ->middleware('vai_tro:giang_vien');
+        Route::post('/{maPhong}/chia-se-trang-thai', [PhongHocController::class, 'chiaSeTrangThai']);
     });
 
     // Giảng viên: lớp phụ trách, lịch dạy và điều chỉnh điểm danh.
