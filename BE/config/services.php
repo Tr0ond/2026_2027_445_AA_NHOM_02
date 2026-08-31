@@ -18,6 +18,11 @@ return [
         'key' => env('POSTMARK_API_KEY'),
     ],
 
+    'agora' => [
+        'app_id' => env('AGORA_APP_ID'),
+        'certificate' => env('AGORA_APP_CERTIFICATE'),
+    ],
+
     'resend' => [
         'key' => env('RESEND_API_KEY'),
     ],
