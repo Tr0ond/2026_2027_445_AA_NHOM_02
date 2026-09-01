@@ -15,6 +15,12 @@ const routes = [
     component: () => import('../views/diem-danh/diem-danh-mobile.vue'),
     meta: { layout: 'blank', choPhepKhongDangNhap: true },
   },
+  {
+    path: '/phong-hoc/:maPhong',
+    name: 'phong-hoc',
+    component: () => import('../views/phong-hoc/phong-hoc.vue'),
+    meta: { layout: 'blank' },
+  },
 
   // MVP sinh viên: đăng ký lớp, lịch học và lịch sử điểm danh.
   {
