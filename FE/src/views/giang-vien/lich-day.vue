@@ -32,11 +32,19 @@
           <div class="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-teal-50">
             <span><i class="fa-regular fa-calendar mr-1.5"></i>{{ dinhDangNgay(buoiKeTiep.ngay_hoc) }}</span>
             <span><i class="fa-regular fa-clock mr-1.5"></i>{{ buoiKeTiep.gio_bat_dau }}–{{ buoiKeTiep.gio_ket_thuc }}</span>
-            <span><i class="fa-solid fa-location-dot mr-1.5"></i>{{ buoiKeTiep.phong_hoc || 'Chưa cập nhật phòng' }}</span>
+            <span><i class="fa-solid fa-location-dot mr-1.5"></i>{{ buoiKeTiep.co_hoc_truc_tuyen ? 'Trực tuyến' : (buoiKeTiep.phong_hoc || 'Chưa cập nhật phòng') }}</span>
           </div>
-          <router-link :to="{ name: 'gv-quan-ly-diem-danh' }" class="mt-5 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-teal-700">
-            <i class="fa-solid fa-qrcode"></i>Tạo QR điểm danh
-          </router-link>
+          <div class="mt-5 flex flex-wrap gap-3">
+            <button v-if="buoiKeTiep.co_hoc_truc_tuyen && !buoiKeTiep.phong" class="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-teal-700 disabled:opacity-60" :disabled="dangMo === buoiKeTiep.id" @click="batDauDay(buoiKeTiep)">
+              <i class="fa-solid" :class="dangMo === buoiKeTiep.id ? 'fa-spinner fa-spin' : 'fa-video'"></i>Mở phòng học
+            </button>
+            <button v-if="buoiKeTiep.phong?.trang_thai === 'dang_dien_ra'" class="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-teal-700" @click="vaoPhong(buoiKeTiep.phong.ma_phong)">
+              <i class="fa-solid fa-video"></i>Vào phòng học
+            </button>
+            <router-link :to="{ name: 'gv-quan-ly-diem-danh' }" class="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/15 px-4 py-2.5 text-sm font-bold text-white">
+              <i class="fa-solid fa-qrcode"></i>Quản lý điểm danh
+            </router-link>
+          </div>
         </div>
       </div>
 
@@ -109,6 +117,7 @@ export default {
       lops: [],
       dangTai: true,
       loi: '',
+      dangMo: null,
     }
   },
   computed: {
@@ -143,6 +152,21 @@ export default {
       } finally {
         this.dangTai = false
       }
+    },
+    async batDauDay(buoi) {
+      this.dangMo = buoi.id
+      this.loi = ''
+      try {
+        const { data } = await api.post('/phong/bat-dau', { ma_lich_hoc: buoi.id })
+        this.vaoPhong(data.phong.ma_phong)
+      } catch (error) {
+        this.loi = error.response?.data?.message || 'Không mở được phòng học trực tuyến.'
+      } finally {
+        this.dangMo = null
+      }
+    },
+    vaoPhong(maPhong) {
+      this.$router.push({ name: 'phong-hoc', params: { maPhong } })
     },
     dinhDangNgay(ngay) {
       if (!ngay) return '—'
