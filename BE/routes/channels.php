@@ -2,6 +2,7 @@
 
 use App\Models\PhongHocTrucTuyen;
 use App\Models\User;
+use App\Services\QuyenPhongService;
 use Illuminate\Support\Facades\Broadcast;
 
 // Kênh riêng để lưu thông báo trong database và đẩy realtime tới đúng người nhận.
@@ -16,27 +17,10 @@ Broadcast::channel('phong.{maPhong}', function (User $user, string $maPhong) {
         return false;
     }
 
-    $lopHoc = $phong->lichHoc?->lopHoc;
-    if (! $lopHoc) {
+    if ($phong->trang_thai !== 'dang_dien_ra' || $user->trang_thai !== 'hoat_dong') {
         return false;
     }
 
-    if ($user->laGiangVien()) {
-        $giangVien = $user->giangVien;
-
-        return $giangVien
-            && $lopHoc->phanCong()->where('ma_giang_vien', $giangVien->id)->exists();
-    }
-
-    if ($user->laSinhVien()) {
-        $sinhVien = $user->sinhVien;
-
-        return $sinhVien
-            && $lopHoc->dangKy()
-                ->where('ma_sinh_vien', $sinhVien->id)
-                ->where('trang_thai', 'da_duyet')
-                ->exists();
-    }
-
-    return $user->laAdmin();
+    // Không bắt buộc đã vào video: giữ tương thích với màn hình QR của lớp.
+    return $user->laAdmin() || app(QuyenPhongService::class)->duocThamGia($user, $phong);
 });

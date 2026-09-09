@@ -66,8 +66,13 @@ export default {
       menu: [
         { ten: 'Lịch giảng dạy', route: 'giang-vien-trang-chu', icon: 'fa-solid fa-calendar-week' },
         { ten: 'Quản lý điểm danh', route: 'gv-quan-ly-diem-danh', icon: 'fa-solid fa-clipboard-user' },
+<<<<<<< HEAD
         { ten: 'Quản lý điểm', route: 'gv-quan-ly-diem', icon: 'fa-solid fa-pen-to-square' },
         { ten: 'Đơn xin phép', route: 'gv-quan-ly-don-xin-phep', icon: 'fa-solid fa-file-lines' },
+=======
+        { ten: 'Nhập điểm', route: 'gv-quan-ly-diem', icon: 'fa-solid fa-pen-to-square' },
+        { ten: 'Duyệt xin phép vắng', route: 'gv-xin-phep', icon: 'fa-regular fa-envelope' },
+>>>>>>> e531ad188455fbcb42ccf88394c3b6435af65cda
       ],
     }
   },

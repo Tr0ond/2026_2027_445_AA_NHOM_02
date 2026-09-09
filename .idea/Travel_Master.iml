@@ -166,6 +166,9 @@
       <excludeFolder url="file://$MODULE_DIR$/BE/vendor/web-auth/cose-lib" />
       <excludeFolder url="file://$MODULE_DIR$/BE/vendor/web-auth/webauthn-lib" />
       <excludeFolder url="file://$MODULE_DIR$/BE/vendor/webmozart/assert" />
+      <excludeFolder url="file://$MODULE_DIR$/BE/storage/app" />
+      <excludeFolder url="file://$MODULE_DIR$/BE/storage/framework" />
+      <excludeFolder url="file://$MODULE_DIR$/BE/storage/inertia-devtools" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

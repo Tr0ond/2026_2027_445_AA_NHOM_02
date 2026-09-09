@@ -69,10 +69,15 @@ export default {
       moMenu: false,
       menu: [
         { ten: 'Lịch học', route: 'sinh-vien-lich-hoc', icon: 'fa-solid fa-calendar-week' },
+        { ten: 'Điểm số', route: 'diem-cua-toi', icon: 'fa-solid fa-chart-bar' },
         { ten: 'Đăng ký lớp', route: 'dang-ky-lop', icon: 'fa-solid fa-book-open' },
         { ten: 'Điểm danh', route: 'lich-su-diem-danh', icon: 'fa-solid fa-clipboard-check' },
+<<<<<<< HEAD
         { ten: 'Kết quả học tập', route: 'xem-diem', icon: 'fa-solid fa-chart-line' },
         { ten: 'Đơn xin phép', route: 'don-xin-phep', icon: 'fa-solid fa-file-signature' },
+=======
+        { ten: 'Xin phép vắng', route: 'xin-phep-vang', icon: 'fa-solid fa-file-pen' },
+>>>>>>> e531ad188455fbcb42ccf88394c3b6435af65cda
       ],
     }
   },

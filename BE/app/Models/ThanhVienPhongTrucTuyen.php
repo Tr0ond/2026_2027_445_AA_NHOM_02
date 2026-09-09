@@ -8,7 +8,7 @@ class ThanhVienPhongTrucTuyen extends Model
 {
     protected $table = 'thanh_vien_phong_truc_tuyen';
 
-    protected $fillable = ['ma_phong_hoc_truc_tuyen', 'ma_tai_khoan', 'vai_tro', 'thoi_gian_tham_gia', 'thoi_gian_roi', 'gio_tay', 'duoc_phep_mac', 'duoc_phep_chia_se'];
+    protected $fillable = ['ma_phong_hoc_truc_tuyen', 'ma_tai_khoan', 'vai_tro', 'thoi_gian_tham_gia', 'thoi_gian_roi', 'gio_tay', 'duoc_phep_mac', 'duoc_phep_chia_se', 'dang_chia_se'];
 
     protected function casts(): array
     {
@@ -18,6 +18,7 @@ class ThanhVienPhongTrucTuyen extends Model
             'gio_tay' => 'boolean',
             'duoc_phep_mac' => 'boolean',
             'duoc_phep_chia_se' => 'boolean',
+            'dang_chia_se' => 'boolean',
         ];
     }
 

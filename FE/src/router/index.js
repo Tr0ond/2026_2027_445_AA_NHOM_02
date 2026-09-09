@@ -15,6 +15,12 @@ const routes = [
     component: () => import('../views/diem-danh/diem-danh-mobile.vue'),
     meta: { layout: 'blank', choPhepKhongDangNhap: true },
   },
+  {
+    path: '/phong-hoc/:maPhong',
+    name: 'phong-hoc',
+    component: () => import('../views/phong-hoc/phong-hoc.vue'),
+    meta: { layout: 'blank' },
+  },
 
   // MVP sinh viên: đăng ký lớp, lịch học và lịch sử điểm danh.
   {
@@ -42,6 +48,7 @@ const routes = [
     meta: { layout: 'default', vai_tro: 'sinh_vien' },
   },
   {
+<<<<<<< HEAD
     path: '/sinh-vien/xem-diem',
     name: 'xem-diem',
     component: () => import('../views/sinh-vien/xem-diem.vue'),
@@ -51,6 +58,17 @@ const routes = [
     path: '/sinh-vien/don-xin-phep',
     name: 'don-xin-phep',
     component: () => import('../views/sinh-vien/don-xin-phep.vue'),
+=======
+    path: '/sinh-vien/xin-phep',
+    name: 'xin-phep-vang',
+    component: () => import('../views/sinh-vien/xin-phep-vang.vue'),
+    meta: { layout: 'default', vai_tro: 'sinh_vien' },
+  },
+  {
+    path: '/sinh-vien/diem',
+    name: 'diem-cua-toi',
+    component: () => import('../views/sinh-vien/diem-cua-toi.vue'),
+>>>>>>> e531ad188455fbcb42ccf88394c3b6435af65cda
     meta: { layout: 'default', vai_tro: 'sinh_vien' },
   },
 
@@ -59,6 +77,18 @@ const routes = [
     path: '/giang-vien',
     name: 'giang-vien-trang-chu',
     component: () => import('../views/giang-vien/lich-day.vue'),
+    meta: { layout: 'admin', vai_tro: 'giang_vien' },
+  },
+  {
+    path: '/giang-vien/xin-phep',
+    name: 'gv-xin-phep',
+    component: () => import('../views/giang-vien/xin-phep.vue'),
+    meta: { layout: 'admin', vai_tro: 'giang_vien' },
+  },
+  {
+    path: '/giang-vien/diem',
+    name: 'gv-quan-ly-diem',
+    component: () => import('../views/giang-vien/quan-ly-diem.vue'),
     meta: { layout: 'admin', vai_tro: 'giang_vien' },
   },
   {
