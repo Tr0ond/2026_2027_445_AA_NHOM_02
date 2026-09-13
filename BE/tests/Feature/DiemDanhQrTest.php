@@ -109,7 +109,7 @@ class DiemDanhQrTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_mo_phien_tao_qr_hieu_luc_10_giay_va_phat_su_kien(): void
+    public function test_mo_phien_tao_qr_hieu_luc_15_giay_va_phat_su_kien(): void
     {
         $phien = $this->moPhien();
         $qr = MaQrToken::where('token', $phien['qr_token'])->firstOrFail();
@@ -118,7 +118,7 @@ class DiemDanhQrTest extends TestCase
         $this->assertSame('dang_mo', $phien['trang_thai']);
         $this->assertSame(300, $phien['so_giay']);
         $this->assertSame(64, strlen($qr->token));
-        $this->assertTrue($qr->het_han_luc->equalTo(now()->addSeconds(10)));
+        $this->assertTrue($qr->het_han_luc->equalTo(now()->addSeconds(15)));
         $this->assertTrue($banGhiPhien->thoi_gian_bat_dau->equalTo(now()));
         $this->assertTrue($banGhiPhien->thoi_gian_ket_thuc->equalTo(now()->addMinutes(5)));
         $this->assertSame($qr->het_han_luc->toIso8601String(), $phien['qr_het_han_luc']);
@@ -177,10 +177,10 @@ class DiemDanhQrTest extends TestCase
         Event::assertNotDispatched(DiemDanhThanhCong::class);
     }
 
-    public function test_qr_het_han_sau_10_giay_bi_tu_choi_du_phien_van_mo(): void
+    public function test_qr_het_han_sau_15_giay_bi_tu_choi_du_phien_van_mo(): void
     {
         $phien = $this->moPhien();
-        $this->travel(11)->seconds();
+        $this->travel(16)->seconds();
         Sanctum::actingAs($this->taiKhoanSinhVien);
 
         $this->assertTrue(PhienDiemDanh::findOrFail($phien['id'])->conMo());
@@ -192,10 +192,10 @@ class DiemDanhQrTest extends TestCase
         Event::assertNotDispatched(DiemDanhThanhCong::class);
     }
 
-    public function test_qr_tai_dung_moc_10_giay_cung_bi_tu_choi(): void
+    public function test_qr_tai_dung_moc_15_giay_cung_bi_tu_choi(): void
     {
         $phien = $this->moPhien();
-        $this->travel(10)->seconds();
+        $this->travel(15)->seconds();
         Sanctum::actingAs($this->taiKhoanSinhVien);
 
         $this->postJson($this->urlQuet($phien['qr_token']))
@@ -236,7 +236,7 @@ class DiemDanhQrTest extends TestCase
     public function test_lam_moi_qr_xoa_token_het_han_va_token_moi_su_dung_duoc(): void
     {
         $phien = $this->moPhien();
-        $this->travel(11)->seconds();
+        $this->travel(16)->seconds();
 
         $response = $this->getJson("/api/phien-diem-danh/{$phien['id']}/qr-token")
             ->assertOk();
@@ -245,7 +245,7 @@ class DiemDanhQrTest extends TestCase
         $this->assertDatabaseMissing('ma_qr_token', ['token' => $phien['qr_token']]);
         $this->assertDatabaseCount('ma_qr_token', 1);
         $this->assertTrue(MaQrToken::where('token', $qrMoi)->firstOrFail()
-            ->het_han_luc->equalTo(now()->addSeconds(10)));
+            ->het_han_luc->equalTo(now()->addSeconds(15)));
         Event::assertDispatched(MaQrDiemDanhCapNhat::class, fn ($event) => $event->maPhong === $this->phongHoc->ma_phong
             && $event->maPhien === $phien['ma_phien']
             && $event->duongDanQr === $response->json('duong_dan_qr')
