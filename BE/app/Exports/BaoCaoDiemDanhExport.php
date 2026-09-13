@@ -18,12 +18,9 @@ class BaoCaoDiemDanhExport implements FromCollection, WithHeadings, WithTitle, S
     public function collection(): \Illuminate\Support\Collection
     {
         $phienIds = PhienDiemDanh::whereHas('lichHoc', fn ($q) => $q->where('ma_lop_hoc', $this->lopHoc->id))
+            ->where('trang_thai', 'da_dong')
             ->orderBy('thoi_gian_bat_dau')
             ->pluck('id');
-
-        $phienThoiGian = PhienDiemDanh::whereIn('id', $phienIds)
-            ->get()
-            ->keyBy('id');
 
         $sinhViens = DangKyLopHoc::with('sinhVien.taiKhoan')
             ->where('ma_lop_hoc', $this->lopHoc->id)
@@ -38,6 +35,7 @@ class BaoCaoDiemDanhExport implements FromCollection, WithHeadings, WithTitle, S
             ];
             $soCoMat = 0;
             $soVang = 0;
+            $soXinPhep = 0;
 
             foreach ($phienIds as $phienId) {
                 $ct = ChiTietDiemDanh::where('ma_phien_diem_danh', $phienId)
@@ -47,12 +45,15 @@ class BaoCaoDiemDanhExport implements FromCollection, WithHeadings, WithTitle, S
                 $trangThai = match ($ct->trang_thai_diem_danh ?? 'vang') {
                     'co_mat' => 'X',
                     'di_muon' => 'M',
-                    'xin_phep' => 'P',
+                    'xin_phep', 'vang_co_phep' => 'P',
                     default => 'V',
                 };
 
-                if (in_array($ct->trang_thai_diem_danh ?? 'vang', ['co_mat', 'di_muon'])) {
+                $trangThaiGoc = $ct->trang_thai_diem_danh ?? 'vang';
+                if (in_array($trangThaiGoc, ['co_mat', 'di_muon'], true)) {
                     $soCoMat++;
+                } elseif (in_array($trangThaiGoc, ['xin_phep', 'vang_co_phep'], true)) {
+                    $soXinPhep++;
                 } else {
                     $soVang++;
                 }
@@ -62,6 +63,7 @@ class BaoCaoDiemDanhExport implements FromCollection, WithHeadings, WithTitle, S
 
             $row[] = $soCoMat;
             $row[] = $soVang;
+            $row[] = $soXinPhep;
             $row[] = $phienIds->count() > 0 ? round($soCoMat / $phienIds->count() * 100, 1).'%' : '-';
             $rows[] = $row;
         }
@@ -72,6 +74,7 @@ class BaoCaoDiemDanhExport implements FromCollection, WithHeadings, WithTitle, S
     public function headings(): array
     {
         $phienThoiGian = PhienDiemDanh::whereHas('lichHoc', fn ($q) => $q->where('ma_lop_hoc', $this->lopHoc->id))
+            ->where('trang_thai', 'da_dong')
             ->orderBy('thoi_gian_bat_dau')
             ->get();
 
@@ -83,6 +86,7 @@ class BaoCaoDiemDanhExport implements FromCollection, WithHeadings, WithTitle, S
 
         $headings[] = 'Số buổi có mặt';
         $headings[] = 'Số buổi vắng';
+        $headings[] = 'Số buổi xin phép';
         $headings[] = 'Tỷ lệ chuyên cần';
 
         return $headings;

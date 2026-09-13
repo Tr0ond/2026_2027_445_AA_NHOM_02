@@ -38,7 +38,9 @@ class BaoCaoController extends Controller
 
             $coMat = $chiTiet->whereIn('trang_thai_diem_danh', ['co_mat', 'di_muon'])->count();
             $vang = $chiTiet->where('trang_thai_diem_danh', 'vang')->count();
-            $xinPhep = $chiTiet->where('trang_thai_diem_danh', 'xin_phep')->count();
+            // Dữ liệu cũ dùng `xin_phep`, còn luồng duyệt đơn hiện tại ghi
+            // `vang_co_phep`. Cả hai đều phải được tính là nghỉ có phép.
+            $xinPhep = $chiTiet->whereIn('trang_thai_diem_danh', ['xin_phep', 'vang_co_phep'])->count();
 
             return [
                 'ma_sv_text' => $dk->sinhVien?->ma_sinh_vien,
