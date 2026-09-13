@@ -26,6 +26,16 @@ class DiemDanhSinhVienController extends Controller
             return response()->json(['message' => 'Tài khoản không phải sinh viên.'], 403);
         }
 
+        // Không nhận mã sinh viên từ thiết bị làm danh tính điểm danh. Nếu client
+        // cố gửi mã của người khác, chặn yêu cầu thay vì ghi nhận quét hộ.
+        if ($request->filled('ma_sinh_vien')
+            && (int) $request->input('ma_sinh_vien') !== $sinhVien->id) {
+            return response()->json([
+                'thanh_cong' => false,
+                'message' => 'Không thể điểm danh thay cho sinh viên khác.',
+            ], 403);
+        }
+
         $qrToken = MaQrToken::with(['phien.lichHoc.lopHoc.monHoc', 'phien.chiTiet'])
             ->where('token', $maQr)
             ->where('het_han_luc', '>', now())
