@@ -766,14 +766,6 @@ export default {
             }
           }
         })
-        .listen('.phong.thanh.vien.cap.nhat', async () => {
-          await this.taiThanhVien()
-        })
-        .listen('.phong.ket.thuc', () => {
-          this.roiAgora()
-          this.echo?.leave(`phong.${this.phong.ma_phong}`)
-          this.$router.replace(this.laGiangVien ? { name: 'giang-vien-trang-chu' } : { name: 'sinh-vien-lich-hoc' })
-        })
     },
 
     // ---------- Phiên điểm danh ----------
@@ -830,7 +822,7 @@ export default {
 
     batDauXoayQr() {
       this.dungXoayQr()
-      this.qrTokenTimer = setInterval(() => this.capNhatQr(), 8000)
+      this.qrTokenTimer = setInterval(() => this.capNhatQr(), 10000)
     },
 
     dungXoayQr() {

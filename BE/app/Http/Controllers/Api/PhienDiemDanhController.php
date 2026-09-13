@@ -21,6 +21,10 @@ use Illuminate\Support\Str;
 
 class PhienDiemDanhController extends Controller
 {
+    private const QR_ROTATION_SECONDS = 10;
+
+    private const QR_TOKEN_TTL_SECONDS = 15;
+
     /**
      * US14 - Giảng viên tạo phiên điểm danh và sinh QR token ngắn hạn.
      */
@@ -140,6 +144,7 @@ class PhienDiemDanhController extends Controller
                 'qr_token' => $qrToken->token,
                 'duong_dan_qr' => $duongDanQr,
                 'qr_het_han_luc' => $qrToken->het_han_luc->toIso8601String(),
+                'qr_xoay_sau_giay' => self::QR_ROTATION_SECONDS,
                 'thoi_gian_bat_dau' => $batDau->toIso8601String(),
                 'thoi_gian_ket_thuc' => $ketThuc->toIso8601String(),
                 'so_giay' => $soPhut * 60,
@@ -188,6 +193,7 @@ class PhienDiemDanhController extends Controller
             'qr_token' => $qrToken->token,
             'duong_dan_qr' => $duongDanQr,
             'qr_het_han_luc' => $qrToken->het_han_luc->toIso8601String(),
+            'qr_xoay_sau_giay' => self::QR_ROTATION_SECONDS,
         ]);
     }
 
@@ -359,7 +365,9 @@ class PhienDiemDanhController extends Controller
         return MaQrToken::create([
             'ma_phien' => $phien->id,
             'token' => Str::random(64),
-            'het_han_luc' => now()->addSeconds(10),
+            // FE đổi mã sau mỗi 10 giây. Token sống thêm 5 giây để chịu được
+            // độ trễ camera/mạng tại đúng thời điểm QR vừa được thay mới.
+            'het_han_luc' => now()->addSeconds(self::QR_TOKEN_TTL_SECONDS),
         ]);
     }
 
