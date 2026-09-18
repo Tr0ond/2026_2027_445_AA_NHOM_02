@@ -5,7 +5,7 @@
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5"><div v-for="th in thongKe" :key="th.nhan" class="the p-5 flex items-start gap-4"><div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" :class="th.nen"><i :class="th.icon"></i></div><div><p class="text-xs text-slate-500 font-medium">{{ th.nhan }}</p><p class="text-2xl font-bold text-slate-900 mt-0.5">{{ th.giaTri }}</p></div></div></div>
     <div class="the p-3 mb-4 flex flex-wrap items-center gap-2"><div class="relative flex-1 min-w-[220px]"><i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i><input v-model="tuKhoa" class="o-nhap !pl-9" placeholder="Tìm mã sinh viên, họ tên hoặc email..." @input="tai(1)" /></div>
         <input v-model="locLop" class="o-nhap !w-auto" placeholder="Lớp danh nghĩa (CNTT-K48A)" @input="tai(1)" />
-      <button class="nut-phu text-sm"><i class="fa-solid fa-download"></i>Xuất dữ liệu</button></div>
+      <button class="nut-phu text-sm" @click="xuatDuLieu"><i class="fa-solid fa-download"></i>Xuất dữ liệu</button></div>
     <div class="the">
       <div class="overflow-x-auto">
         <table class="bang">
@@ -43,6 +43,7 @@
 
 <script>
 import api from '../../utils/axios'
+import { taiCsv } from '../../utils/export'
 
 export default {
   name: 'admin-sinh-vien',
@@ -61,6 +62,17 @@ export default {
   },
   computed: { thongKe() { return [ { icon: 'fa-solid fa-user-graduate', nen: 'bg-indigo-50 text-indigo-600', nhan: 'Tổng sinh viên', giaTri: this.tong }, { icon: 'fa-solid fa-circle-check', nen: 'bg-emerald-50 text-emerald-600', nhan: 'Hoạt động', giaTri: this.danhSach.filter((s) => s.trang_thai === 'hoat_dong').length }, { icon: 'fa-solid fa-users-rectangle', nen: 'bg-teal-50 text-teal-600', nhan: 'Có lớp đăng ký', giaTri: this.danhSach.filter((s) => Number(s.so_lop_dang_ky) > 0).length }, { icon: 'fa-solid fa-user-lock', nen: 'bg-slate-100 text-slate-500', nhan: 'Bị khóa', giaTri: this.danhSach.filter((s) => s.trang_thai !== 'hoat_dong').length } ] } },
   methods: {
+    xuatDuLieu() {
+      taiCsv('sinh-vien.csv', [
+        { label: 'Mã sinh viên', value: (x) => x.ma_sinh_vien },
+        { label: 'Họ tên', value: (x) => x.ho_ten },
+        { label: 'Email', value: (x) => x.email },
+        { label: 'Lớp danh nghĩa', value: (x) => x.lop_danh_nghia || '' },
+        { label: 'Khoa', value: (x) => x.khoa || '' },
+        { label: 'Số lớp đăng ký', value: (x) => x.so_lop_dang_ky },
+        { label: 'Trạng thái', value: (x) => x.trang_thai === 'hoat_dong' ? 'Hoạt động' : 'Bị khóa' },
+      ], this.danhSach)
+    },
     async tai(trang = 1) {
       const { data } = await api.get('/admin/sinh-vien', {
         params: {

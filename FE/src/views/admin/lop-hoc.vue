@@ -7,7 +7,7 @@
 
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5"><div v-for="th in thongKe" :key="th.nhan" class="the p-5 flex items-start gap-4"><div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" :class="th.nen"><i :class="th.icon"></i></div><div><p class="text-xs text-slate-500 font-medium">{{ th.nhan }}</p><p class="text-2xl font-bold text-slate-900 mt-0.5">{{ th.giaTri }}</p></div></div></div>
 
-    <div class="the p-3 mb-4 flex flex-wrap items-center gap-2"><div class="relative flex-1 min-w-[220px]"><i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i><input v-model="tuKhoa" class="o-nhap !pl-9" placeholder="Tìm kiếm lớp học phần hoặc mã lớp..." @input="tai" /></div><select v-model="locHocKy" class="o-nhap !w-auto min-w-[140px]"><option value="">Tất cả học kỳ</option><option v-for="hk in cacHocKy" :key="hk" :value="hk">{{ hk }}</option></select><select v-model="locTrangThai" class="o-nhap !w-auto min-w-[150px]"><option value="">Tất cả trạng thái</option><option value="mo_dang_ky">Mở đăng ký</option><option value="dang_hoc">Đang học</option><option value="da_ket_thuc">Đã kết thúc</option></select><button class="nut-phu text-sm"><i class="fa-solid fa-download"></i>Xuất dữ liệu</button><button class="nut-chinh text-sm" @click="moThem()"><i class="fa-solid fa-plus"></i>Tạo lớp học phần</button></div>
+    <div class="the p-3 mb-4 flex flex-wrap items-center gap-2"><div class="relative flex-1 min-w-[220px]"><i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i><input v-model="tuKhoa" class="o-nhap !pl-9" placeholder="Tìm kiếm lớp học phần hoặc mã lớp..." @input="tai" /></div><select v-model="locHocKy" class="o-nhap !w-auto min-w-[140px]"><option value="">Tất cả học kỳ</option><option v-for="hk in cacHocKy" :key="hk" :value="hk">{{ hk }}</option></select><select v-model="locTrangThai" class="o-nhap !w-auto min-w-[150px]"><option value="">Tất cả trạng thái</option><option value="mo_dang_ky">Mở đăng ký</option><option value="dang_hoc">Đang học</option><option value="da_ket_thuc">Đã kết thúc</option></select><button class="nut-phu text-sm" @click="xuatDuLieu"><i class="fa-solid fa-download"></i>Xuất dữ liệu</button><button class="nut-chinh text-sm" @click="moThem()"><i class="fa-solid fa-plus"></i>Tạo lớp học phần</button></div>
 
     <div class="the">
       <div class="overflow-x-auto">
@@ -248,6 +248,7 @@
 
 <script>
 import api from '../../utils/axios'
+import { taiCsv } from '../../utils/export'
 
 export default {
   name: 'admin-lop-hoc',
@@ -292,6 +293,16 @@ export default {
     ] },
   },
   methods: {
+    xuatDuLieu() {
+      taiCsv('lop-hoc-phan.csv', [
+        { label: 'Mã lớp', value: (x) => x.ma_lop_hoc },
+        { label: 'Tên lớp', value: (x) => x.ten_lop },
+        { label: 'Môn học', value: (x) => x.mon_hoc?.ten_mon || '' },
+        { label: 'Học kỳ', value: (x) => (x.hoc_ky || '') + ' ' + (x.nam_hoc || '') },
+        { label: 'Số sinh viên', value: (x) => x.so_sinh_vien || 0 },
+        { label: 'Trạng thái', value: (x) => ({ mo_dang_ky: 'Mở đăng ký', dang_hoc: 'Đang học', da_ket_thuc: 'Đã kết thúc' }[x.trang_thai] || x.trang_thai) },
+      ], this.danhSachHienThi)
+    },
     formTrong() {
       return {
         id: null, ma_lop_hoc: '', ten_lop: '', ma_mon_hoc: '', hoc_ky: 'HK1',

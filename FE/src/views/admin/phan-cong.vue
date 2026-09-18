@@ -7,7 +7,7 @@
 
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5"><div v-for="th in thongKe" :key="th.nhan" class="the p-5 flex items-start gap-4"><div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" :class="th.nen"><i :class="th.icon"></i></div><div><p class="text-xs text-slate-500 font-medium">{{ th.nhan }}</p><p class="text-2xl font-bold text-slate-900 mt-0.5">{{ th.giaTri }}</p><p v-if="th.phu" class="text-xs text-slate-500">{{ th.phu }}</p></div></div></div>
 
-    <div class="the p-3 mb-4 flex flex-wrap items-center gap-2"><div class="relative flex-1 min-w-[220px]"><i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i><input v-model="tuKhoa" class="o-nhap !pl-9" placeholder="Tìm kiếm giảng viên..." /></div><button class="nut-phu text-sm"><i class="fa-solid fa-download"></i>Xuất dữ liệu</button></div>
+    <div class="the p-3 mb-4 flex flex-wrap items-center gap-2"><div class="relative flex-1 min-w-[220px]"><i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i><input v-model="tuKhoa" class="o-nhap !pl-9" placeholder="Tìm kiếm giảng viên..." /></div><button class="nut-phu text-sm" @click="xuatDuLieu"><i class="fa-solid fa-download"></i>Xuất dữ liệu</button></div>
 
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <div v-for="gv in giangVienHienThi" :key="gv.id" class="bg-white rounded-[14px] border p-5 shadow-[0_1px_3px_0_rgb(0,0,0,0.06)]" :class="gv.quaTai ? 'border-amber-300' : 'border-slate-200'">
@@ -37,6 +37,7 @@
 
 <script>
 import api from '../../utils/axios'
+import { taiCsv } from '../../utils/export'
 
 export default {
   name: 'admin-phan-cong',
@@ -53,6 +54,14 @@ export default {
   },
   async created() { await this.tai() },
   methods: {
+    xuatDuLieu() {
+      taiCsv('phan-cong-giang-day.csv', [
+        { label: 'Mã giảng viên', value: (x) => x.ma_giang_vien },
+        { label: 'Giảng viên', value: (x) => x.ho_ten },
+        { label: 'Số lớp', value: (x) => x.lops.length },
+        { label: 'Lớp phụ trách', value: (x) => x.lops.map((l) => l.ma_lop_hoc).join('; ') },
+      ], this.giangVienHienThi)
+    },
     async tai() { const [resLop, resGv] = await Promise.all([api.get('/admin/phan-cong'), api.get('/admin/phan-cong/giang-vien')]); this.danhSach = resLop.data.danh_sach || []; this.giangViens = resGv.data.danh_sach || [] },
     async phanCong() { this.loiForm = ''; try { await api.post('/admin/phan-cong', this.form); this.form = { ma_lop_hoc: '', ma_giang_vien: '' }; this.moModal = false; await this.tai() } catch (e) { this.loiForm = e.response?.data?.message || 'Phân công thất bại.' } },
     async huyPhanCong(lop, gv) { if (!confirm(`Hủy phân công "${gv.ho_ten}" khỏi lớp ${lop.ma_lop_hoc}?`)) return; try { await api.delete('/admin/phan-cong', { params: { ma_giang_vien: gv.id, ma_lop_hoc: lop.id } }); await this.tai() } catch (e) { alert(e.response?.data?.message || 'Hủy thất bại.') } },

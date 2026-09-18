@@ -33,6 +33,8 @@ use Illuminate\Support\Facades\Route;
 Broadcast::routes(['middleware' => ['auth:sanctum']]);
 
 Route::post('/dang-nhap', [AuthController::class, 'dangNhap']);
+Route::post('/quen-mat-khau', [AuthController::class, 'guiLienKetDatLaiMatKhau']);
+Route::post('/dat-lai-mat-khau', [AuthController::class, 'datLaiMatKhau']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/dang-xuat', [AuthController::class, 'dangXuat']);

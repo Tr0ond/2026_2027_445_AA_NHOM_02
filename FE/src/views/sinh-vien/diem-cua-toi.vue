@@ -15,7 +15,7 @@
     <div class="flex flex-wrap items-center gap-3 mb-5">
       <div class="relative flex-1 min-w-[190px] max-w-xs"><i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i><input v-model="tuKhoa" class="o-nhap !pl-8 !py-2" placeholder="Tìm môn học..."></div>
       <select v-model="locTrangThai" class="o-nhap !w-auto !py-2"><option value="">Tất cả trạng thái</option><option value="dat">Đã đạt</option><option value="chua_dat">Chưa đạt</option><option value="chua_co">Chưa có điểm</option></select>
-      <button class="nut-phu ml-auto"><i class="fa-solid fa-download text-xs"></i>Xuất bảng điểm</button>
+      <button class="nut-phu ml-auto" @click="xuatBangDiem"><i class="fa-solid fa-download text-xs"></i>Xuất bảng điểm</button>
     </div>
 
     <div class="the overflow-hidden">
@@ -41,6 +41,7 @@
 
 <script>
 import api from '../../utils/axios'
+import { taiCsv } from '../../utils/export'
 
 export default {
   name: 'diem-cua-toi',
@@ -60,6 +61,15 @@ export default {
   },
   async created() { const { data } = await api.get('/sinh-vien/diem'); this.danhSach = data.danh_sach || [] },
   methods: {
+    xuatBangDiem() {
+      taiCsv('bang-diem-ca-nhan.csv', [
+        { label: 'Môn học', value: (x) => x.mon_hoc },
+        { label: 'Lớp', value: (x) => x.ten_lop },
+        { label: 'Điểm thành phần', value: (x) => (x.diem_thanh_phan || []).map((d) => d.ten_thanh_phan + ': ' + (d.diem ?? '—')).join('; ') },
+        { label: 'Điểm tổng kết', value: (x) => x.diem_tong_ket ?? '' },
+        { label: 'Xếp loại', value: (x) => x.xep_loai || '' },
+      ], this.danhSachLoc)
+    },
     mauDiem(d) { if (d === null || d === undefined) return 'text-slate-300'; return Number(d) >= 8 ? 'text-emerald-600' : Number(d) >= 5 ? 'text-blue-600' : 'text-rose-600' },
     mauXepLoai(l) { if (l.diem_tong_ket == null) return 'bg-slate-50 text-slate-400 border-slate-200'; return l.trang_thai_ket_qua === 'dat' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200' },
   },

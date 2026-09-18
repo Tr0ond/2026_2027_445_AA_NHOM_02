@@ -9,7 +9,7 @@
       <div v-for="th in thongKe" :key="th.nhan" class="the p-5 flex items-start gap-4"><div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" :class="th.nen"><i :class="th.icon"></i></div><div><p class="text-xs text-slate-500 font-medium">{{ th.nhan }}</p><p class="text-2xl font-bold text-slate-900 mt-0.5">{{ th.giaTri }}</p></div></div>
     </div>
 
-    <div class="the p-3 mb-4 flex flex-wrap items-center gap-2"><div class="relative flex-1 min-w-[220px]"><i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i><input v-model="tuKhoa" class="o-nhap !pl-9" placeholder="Tìm kiếm môn học hoặc mã môn..." @input="tai" /></div><button class="nut-phu text-sm"><i class="fa-solid fa-download"></i>Xuất dữ liệu</button><button class="nut-chinh text-sm" @click="moThem()"><i class="fa-solid fa-plus"></i>Thêm môn học</button></div>
+    <div class="the p-3 mb-4 flex flex-wrap items-center gap-2"><div class="relative flex-1 min-w-[220px]"><i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i><input v-model="tuKhoa" class="o-nhap !pl-9" placeholder="Tìm kiếm môn học hoặc mã môn..." @input="tai" /></div><button class="nut-phu text-sm" @click="xuatDuLieu"><i class="fa-solid fa-download"></i>Xuất dữ liệu</button><button class="nut-chinh text-sm" @click="moThem()"><i class="fa-solid fa-plus"></i>Thêm môn học</button></div>
 
     <div class="the">
       <div class="overflow-x-auto">
@@ -132,6 +132,7 @@
 
 <script>
 import api from '../../utils/axios'
+import { taiCsv } from '../../utils/export'
 
 export default {
   name: 'admin-mon-hoc',
@@ -167,6 +168,14 @@ export default {
     ] },
   },
   methods: {
+    xuatDuLieu() {
+      taiCsv('mon-hoc.csv', [
+        { label: 'Mã môn', value: (x) => x.ma_mon_hoc },
+        { label: 'Tên môn', value: (x) => x.ten_mon },
+        { label: 'Số tín chỉ', value: (x) => x.so_tin_chi },
+        { label: 'Số lớp', value: (x) => x.so_lop },
+      ], this.danhSach)
+    },
     async tai() {
       const { data } = await api.get('/admin/mon-hoc', { params: { tu_khoa: this.tuKhoa || null } })
       this.danhSach = data.danh_sach
