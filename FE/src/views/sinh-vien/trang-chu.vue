@@ -1,33 +1,34 @@
 <template>
-  <div class="space-y-6">
-    <div class="flex items-start justify-between gap-4 flex-wrap">
+  <div class="trang-chu-sinh-vien space-y-6">
+    <div class="flex items-end justify-between gap-4 flex-wrap">
       <div>
-        <h1 class="text-2xl font-bold text-slate-900">Xin chào, <span class="text-brand-600">{{ auth.hoTen || 'Sinh viên' }}</span> 👋</h1>
-        <p class="text-slate-500 text-sm mt-0.5">Học kỳ II – Năm học 2025–2026 <span v-if="thongTinSinhVien">&nbsp;·&nbsp; MSSV: {{ thongTinSinhVien.ma_sinh_vien }} &nbsp;·&nbsp; Lớp: {{ thongTinSinhVien.lop_danh_nghia || '—' }}</span></p>
+        <p class="text-xs font-bold uppercase tracking-[0.18em] text-brand-700 mb-1">Không gian học tập</p>
+        <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900">Xin chào, {{ auth.hoTen || 'Sinh viên' }}</h1>
+        <p class="text-slate-500 text-sm mt-2">Học kỳ II · Năm học 2025–2026 <span v-if="thongTinSinhVien"> · {{ thongTinSinhVien.ma_sinh_vien }} · {{ thongTinSinhVien.lop_danh_nghia || 'Chưa cập nhật lớp' }}</span></p>
       </div>
-      <div class="text-right shrink-0 hidden sm:block"><p class="text-sm text-slate-500">{{ homNay }}</p><p class="text-xl font-bold text-slate-800">{{ gioHienTai }}</p></div>
+      <div class="text-right shrink-0 hidden sm:block"><p class="text-xs font-bold uppercase tracking-wider text-slate-400">Hôm nay</p><p class="text-sm font-semibold text-slate-600 mt-1">{{ homNay }}</p><p class="text-3xl font-black tracking-tight text-brand-800 mt-1">{{ gioHienTai }}</p></div>
     </div>
 
-    <div v-if="buoiKeTiep" class="bg-gradient-to-r from-brand-600 via-brand-600 to-violet-700 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
-      <div class="absolute -right-8 -top-8 w-40 h-40 bg-white/5 rounded-3xl rotate-12"></div><div class="absolute right-16 bottom-0 w-24 h-24 bg-white/5 rounded-2xl -rotate-6"></div>
+    <div v-if="buoiKeTiep" class="relative overflow-hidden rounded-[24px] bg-gradient-to-br from-[#092c3d] via-brand-800 to-brand-600 p-6 sm:p-8 text-white shadow-xl">
+      <div class="absolute -right-16 -top-24 h-72 w-72 rounded-full border-[34px] border-cyan-300/10"></div><div class="absolute right-28 -bottom-28 h-56 w-56 rounded-full border-[24px] border-white/5"></div>
       <div class="relative z-10">
-        <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-white/20 border border-white/30 mb-3"><span class="w-1.5 h-1.5 rounded-full" :class="buoiKeTiep.phong_truc_tuyen?.trang_thai === 'dang_dien_ra' ? 'bg-emerald-300 animate-pulse' : 'bg-indigo-200'"></span>{{ buoiKeTiep.phong_truc_tuyen?.trang_thai === 'dang_dien_ra' ? 'Đang diễn ra' : 'Buổi học tiếp theo' }}</span>
-        <h2 class="text-xl font-bold mb-1">{{ buoiKeTiep.mon_hoc }}</h2>
-        <div class="flex flex-wrap items-center gap-x-5 gap-y-1 text-indigo-200 text-sm mb-5">
+        <span class="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full bg-white/10 border border-white/20 mb-4"><span class="h-2 w-2 rounded-full" :class="buoiKeTiep.phong_truc_tuyen?.trang_thai === 'dang_dien_ra' ? 'bg-emerald-300 animate-pulse' : 'bg-cyan-300'"></span>{{ buoiKeTiep.phong_truc_tuyen?.trang_thai === 'dang_dien_ra' ? 'Đang diễn ra' : 'Buổi học tiếp theo' }}</span>
+        <p class="text-xs text-cyan-200/70 uppercase tracking-[0.16em] font-semibold mb-1">{{ buoiKeTiep.ten_lop || 'Lớp học phần' }}</p>
+        <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2">{{ buoiKeTiep.mon_hoc }}</h2>
+        <div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-cyan-100/80 text-sm mb-6">
           <span><i class="fa-regular fa-calendar mr-1.5"></i>{{ dinhDangNgay(buoiKeTiep.ngay_hoc) }}</span><span><i class="fa-regular fa-clock mr-1.5"></i>{{ buoiKeTiep.gio_bat_dau }} – {{ buoiKeTiep.gio_ket_thuc }}</span><span v-if="buoiKeTiep.giang_vien"><i class="fa-solid fa-chalkboard-user mr-1.5"></i>{{ buoiKeTiep.giang_vien }}</span>
         </div>
         <div class="flex items-center gap-3 flex-wrap">
-          <button v-if="buoiKeTiep.phong_truc_tuyen?.trang_thai === 'dang_dien_ra'" class="flex items-center gap-2 px-5 py-2.5 bg-white text-brand-700 text-sm font-bold rounded-xl hover:bg-brand-50 shadow-sm" @click="vaoPhong(buoiKeTiep.phong_truc_tuyen.ma_phong)"><i class="fa-solid fa-video"></i>Vào phòng học</button>
-          <button class="flex items-center gap-2 px-4 py-2.5 bg-white/15 text-white text-sm font-medium rounded-xl hover:bg-white/25 border border-white/25"><i class="fa-solid fa-qrcode"></i>Điểm danh QR</button>
-          <router-link :to="{ name: 'sinh-vien-lich-hoc' }" class="flex items-center gap-2 px-4 py-2.5 bg-white/15 text-white text-sm font-medium rounded-xl hover:bg-white/25 border border-white/25"><i class="fa-regular fa-calendar"></i>Xem lịch</router-link>
+          <button v-if="buoiKeTiep.phong_truc_tuyen?.trang_thai === 'dang_dien_ra'" class="flex items-center gap-2 px-5 py-3 bg-white text-brand-700 text-sm font-bold rounded-xl hover:bg-cyan-50 shadow-sm" @click="vaoPhong(buoiKeTiep.phong_truc_tuyen.ma_phong)"><i class="fa-solid fa-video"></i>Vào phòng học</button>
+          <router-link :to="{ name: 'sinh-vien-lich-hoc' }" class="flex items-center gap-2 px-5 py-3 bg-white/10 text-white text-sm font-semibold rounded-xl hover:bg-white/20 border border-white/20"><i class="fa-regular fa-calendar"></i>Xem lịch tuần</router-link>
         </div>
       </div>
     </div>
 
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      <div v-for="th in the" :key="th.nhan" class="the p-5 flex items-start gap-4">
-        <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" :class="th.nen"><i :class="th.icon"></i></div>
-        <div class="min-w-0"><p class="text-xs text-slate-500 font-medium uppercase tracking-wide truncate">{{ th.nhan }}</p><p class="text-2xl font-bold text-slate-900 leading-tight mt-0.5">{{ th.gia_tri }}</p><p class="text-xs text-slate-500 mt-0.5">{{ th.phu }}</p></div>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div v-for="th in the" :key="th.nhan" class="the relative overflow-hidden p-4 sm:p-5 flex items-start gap-3 sm:gap-4 hover:-translate-y-0.5 transition-transform">
+        <div class="absolute -right-4 -top-5 h-20 w-20 rounded-full opacity-50" :class="th.nen"></div><div class="relative w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" :class="th.nen"><i :class="th.icon"></i></div>
+        <div class="relative min-w-0"><p class="text-[10px] sm:text-xs text-slate-500 font-bold uppercase tracking-wide truncate">{{ th.nhan }}</p><p class="text-2xl font-black text-slate-900 leading-tight mt-1">{{ th.gia_tri }}</p><p class="text-[11px] text-slate-500 mt-1 truncate">{{ th.phu }}</p></div>
       </div>
     </div>
 
@@ -44,14 +45,16 @@
         </div>
       </div>
 
-      <div class="space-y-4">
-        <div class="the overflow-hidden">
-          <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between"><h3 class="font-semibold text-slate-900 text-sm">Thông báo & Việc cần làm</h3><span class="text-xs bg-rose-500 text-white rounded-full px-2 py-0.5 font-medium">3</span></div>
-          <div class="divide-y divide-slate-50">
-            <div v-for="(n, i) in thongBaoMau" :key="i" class="flex items-start gap-3 px-4 py-3 hover:bg-slate-50/60"><div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" :class="n.mau"><i :class="n.icon" class="text-xs"></i></div><div class="min-w-0 flex-1"><p class="text-xs font-semibold text-slate-800">{{ n.tieuDe }}</p><p class="text-xs text-slate-500">{{ n.moTa }}</p></div></div>
+      <div class="the overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between"><div><h3 class="font-semibold text-slate-900 text-sm">Sắp tới</h3><p class="text-xs text-slate-500 mt-0.5">Các buổi học tiếp theo</p></div><router-link :to="{ name: 'sinh-vien-lich-hoc' }" class="text-xs text-brand-700 font-bold">Xem lịch</router-link></div>
+        <div class="divide-y divide-slate-100">
+          <div v-for="b in buoiSapToi.slice(0, 4)" :key="b.id" class="flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50/70 transition-colors">
+            <div class="w-11 h-11 rounded-xl flex flex-col items-center justify-center shrink-0" :class="b.co_hoc_truc_tuyen ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'"><span class="text-[10px] font-bold uppercase">{{ dinhDangThu(b.ngay_hoc) }}</span><span class="text-base font-black leading-none">{{ new Date(b.ngay_hoc).getDate() }}</span></div>
+            <div class="min-w-0 flex-1"><p class="text-xs font-bold text-slate-800 truncate">{{ b.mon_hoc }}</p><p class="text-xs text-slate-500 truncate mt-0.5">{{ b.gio_bat_dau }}–{{ b.gio_ket_thuc }} · {{ b.phong_hoc || 'Online' }}</p></div>
+            <i :class="b.co_hoc_truc_tuyen ? 'fa-solid fa-wifi text-emerald-500' : 'fa-solid fa-building text-slate-400'" class="text-xs"></i>
           </div>
+          <div v-if="!buoiSapToi.length" class="px-5 py-8 text-center text-sm text-slate-400">Chưa có buổi học sắp tới.</div>
         </div>
-        <div class="the p-4"><h3 class="font-semibold text-slate-900 text-sm mb-3">Truy cập nhanh</h3><div class="grid grid-cols-2 gap-2"><router-link v-for="l in lienKetNhanh" :key="l.route" :to="{ name: l.route }" class="flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl text-xs font-medium text-slate-600 border border-slate-100 hover:bg-brand-50 hover:border-brand-200 hover:text-brand-700"><i :class="l.icon" class="text-base"></i>{{ l.ten }}</router-link></div></div>
       </div>
     </div>
 
@@ -78,6 +81,8 @@ export default {
   data() {
     return {
       lops: [], buoiSapToi: [], diemSo: [], lichSuDiemDanh: [],
+      thoiGianHienTai: new Date(),
+      boDemGio: null,
       thongBaoMau: [
         { icon: 'fa-solid fa-triangle-exclamation', mau: 'text-amber-500 bg-amber-50', tieuDe: 'Kiểm tra lịch học tuần này', moTa: 'Lịch có thể được cập nhật bởi giảng viên' },
         { icon: 'fa-solid fa-calendar-days', mau: 'text-brand-500 bg-brand-50', tieuDe: 'Theo dõi điểm thành phần', moTa: 'Xem kết quả mới nhất trong mục Điểm số' },
@@ -97,8 +102,8 @@ export default {
     diemGanDay() { return this.diemSo.filter((d) => d.diem_tong_ket !== null && d.diem_tong_ket !== undefined).slice(0, 3) },
     gpa() { const ds = this.diemGanDay.map((d) => Number(d.diem_tong_ket)).filter(Number.isFinite); return ds.length ? (ds.reduce((a, b) => a + b, 0) / ds.length).toFixed(2) : '—' },
     tyLeChuyenCan() { const tong = this.lichSuDiemDanh.length; if (!tong) return '—'; const coMat = this.lichSuDiemDanh.filter((d) => ['co_mat', 'di_muon'].includes(d.trang_thai_diem_danh)).length; return `${Math.round(coMat / tong * 100)}%` },
-    homNay() { return new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' }) },
-    gioHienTai() { return new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) },
+    homNay() { return this.thoiGianHienTai.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' }) },
+    gioHienTai() { return this.thoiGianHienTai.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) },
     the() { return [
       { icon: 'fa-solid fa-book-open', nen: 'bg-brand-50 text-brand-600', gia_tri: this.lops.length, nhan: 'Môn đang học', phu: 'Học kỳ hiện tại' },
       { icon: 'fa-solid fa-calendar-check', nen: 'bg-teal-50 text-teal-600', gia_tri: this.buoiHomNay.length, nhan: 'Buổi học hôm nay', phu: 'Xem lịch chi tiết' },
@@ -113,8 +118,17 @@ export default {
     this.diemSo = resDiem.data.danh_sach || []
     this.lichSuDiemDanh = resDiemDanh.data.danh_sach || []
   },
+  mounted() {
+    this.boDemGio = window.setInterval(() => {
+      this.thoiGianHienTai = new Date()
+    }, 1000)
+  },
+  beforeUnmount() {
+    window.clearInterval(this.boDemGio)
+  },
   methods: {
     dinhDangNgay(n) { return new Date(n).toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit' }) },
+    dinhDangThu(n) { return new Date(n).toLocaleDateString('vi-VN', { weekday: 'short' }).replace('.', '') },
     dinhDangDiem(n) { const x = Number(n); return Number.isFinite(x) ? x.toFixed(1) : '—' },
     mauDiem(n) { const x = Number(n); return x >= 8.5 ? 'text-emerald-600' : x >= 7 ? 'text-blue-600' : 'text-amber-600' },
     mauXepLoai(x) { return String(x || '').startsWith('A') ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-blue-50 text-blue-700 border-blue-200' },
@@ -122,3 +136,23 @@ export default {
   },
 }
 </script>
+
+<style scoped>
+.trang-chu-sinh-vien > * {
+  animation: trangChuXuatHien 420ms ease-out both;
+}
+
+.trang-chu-sinh-vien > *:nth-child(2) { animation-delay: 45ms; }
+.trang-chu-sinh-vien > *:nth-child(3) { animation-delay: 90ms; }
+.trang-chu-sinh-vien > *:nth-child(4) { animation-delay: 135ms; }
+.trang-chu-sinh-vien > *:nth-child(5) { animation-delay: 180ms; }
+
+@keyframes trangChuXuatHien {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trang-chu-sinh-vien > * { animation: none; }
+}
+</style>
