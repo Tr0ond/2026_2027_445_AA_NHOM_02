@@ -20,6 +20,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class PhongHocController extends Controller
 {
@@ -38,6 +39,7 @@ class PhongHocController extends Controller
             abort_unless($this->quyenPhong->phuTrach($request->user(), $lichHoc), 403, 'Bạn không phụ trách lớp học này.');
             abort_unless($lichHoc->co_hoc_truc_tuyen, 422, 'Buổi học này không được tổ chức trực tuyến.');
             abort_if(in_array($lichHoc->trang_thai, ['da_hoc', 'da_huy'], true), 422, 'Buổi học đã hoàn tất hoặc bị hủy.');
+            abort_if($lichHoc->daQuaGioHoc(), 422, 'Buổi học đã qua giờ kết thúc, không thể mở phòng học trực tuyến.');
 
             $phong = $lichHoc->phongTrucTuyen()->first();
             $moiTao = ! $phong;
@@ -230,6 +232,80 @@ class PhongHocController extends Controller
         ));
 
         return response()->json(['message' => 'Đã cập nhật quyền.']);
+    }
+
+    /** Cấp hoặc thu hồi một loại quyền cho toàn bộ sinh viên đang ở trong phòng. */
+    public function capQuyenTatCa(Request $request, string $maPhong): JsonResponse
+    {
+        $data = $request->validate([
+            'loai_quyen' => ['required', Rule::in(['mic', 'chia_se'])],
+            'duoc_phep' => ['required', 'boolean'],
+        ]);
+
+        $phong = PhongHocTrucTuyen::where('ma_phong', $maPhong)->firstOrFail();
+        $this->quyenPhong->kiemTraQuanLy($request->user(), $phong);
+        $this->quyenPhong->thanhVienDangThamGia($request->user(), $phong);
+
+        $ketQua = DB::transaction(function () use ($data, $phong) {
+            $thanhViens = ThanhVienPhongTrucTuyen::with('taiKhoan')
+                ->where('ma_phong_hoc_truc_tuyen', $phong->id)
+                ->where('vai_tro', 'sinh_vien')
+                ->whereNull('thoi_gian_roi')
+                ->lockForUpdate()
+                ->get()
+                ->filter(fn ($thanhVien) => $thanhVien->taiKhoan
+                    && $this->quyenPhong->duocThamGia($thanhVien->taiKhoan, $phong));
+
+            return $thanhViens->map(function ($thanhVien) use ($data) {
+                $tatChiaSe = $data['loai_quyen'] === 'chia_se'
+                    && ! $data['duoc_phep']
+                    && $thanhVien->dang_chia_se;
+                $capNhat = $data['loai_quyen'] === 'mic'
+                    ? ['duoc_phep_mac' => $data['duoc_phep']]
+                    : ['duoc_phep_chia_se' => $data['duoc_phep']];
+
+                if ($data['duoc_phep']) {
+                    $capNhat['gio_tay'] = false;
+                }
+                if ($data['loai_quyen'] === 'chia_se' && ! $data['duoc_phep']) {
+                    $capNhat['dang_chia_se'] = false;
+                }
+
+                $thanhVien->update($capNhat);
+                $thanhVien->refresh();
+
+                return ['thanh_vien' => $thanhVien, 'tat_chia_se' => $tatChiaSe];
+            })->values();
+        });
+
+        foreach ($ketQua as $item) {
+            $thanhVien = $item['thanh_vien'];
+
+            if ($item['tat_chia_se']) {
+                broadcast(new NguoiChiaSeManHinh(
+                    $phong->ma_phong,
+                    $thanhVien->ma_tai_khoan,
+                    $thanhVien->taiKhoan?->ho_ten ?? '',
+                    false,
+                ));
+            }
+
+            broadcast(new CapQuyenPhong(
+                $phong->ma_phong,
+                $thanhVien->ma_tai_khoan,
+                $thanhVien->taiKhoan?->ho_ten ?? '',
+                $thanhVien->duoc_phep_mac,
+                $thanhVien->duoc_phep_chia_se,
+            ));
+        }
+
+        $tenQuyen = $data['loai_quyen'] === 'mic' ? 'micro' : 'chia sẻ màn hình';
+        $hanhDong = $data['duoc_phep'] ? 'cấp' : 'thu hồi';
+
+        return response()->json([
+            'message' => "Đã {$hanhDong} quyền {$tenQuyen} cho {$ketQua->count()} sinh viên.",
+            'so_sinh_vien' => $ketQua->count(),
+        ]);
     }
 
     /** Báo trạng thái chia sẻ màn hình để cả phòng biết ai đang chia sẻ (như Zoom). */

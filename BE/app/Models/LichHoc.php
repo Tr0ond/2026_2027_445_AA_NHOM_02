@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 class LichHoc extends Model
 {
@@ -41,5 +42,19 @@ class LichHoc extends Model
     public function donXinPhep()
     {
         return $this->hasMany(DonXinPhep::class, 'ma_lich_hoc');
+    }
+
+    public function thoiGianKetThuc(): Carbon
+    {
+        return Carbon::createFromFormat(
+            'Y-m-d H:i:s',
+            $this->ngay_hoc->format('Y-m-d').' '.$this->gio_ket_thuc->format('H:i:s'),
+            config('app.timezone'),
+        );
+    }
+
+    public function daQuaGioHoc(): bool
+    {
+        return now()->greaterThanOrEqualTo($this->thoiGianKetThuc());
     }
 }

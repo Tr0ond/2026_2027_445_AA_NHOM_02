@@ -33,8 +33,10 @@ use Illuminate\Support\Facades\Route;
 Broadcast::routes(['middleware' => ['auth:sanctum']]);
 
 Route::post('/dang-nhap', [AuthController::class, 'dangNhap']);
-Route::post('/quen-mat-khau', [AuthController::class, 'guiLienKetDatLaiMatKhau']);
-Route::post('/dat-lai-mat-khau', [AuthController::class, 'datLaiMatKhau']);
+Route::post('/quen-mat-khau', [AuthController::class, 'guiLienKetDatLaiMatKhau'])
+    ->middleware('throttle:'.config('auth.forgot_password_rate_limit_per_minute').',1');
+Route::post('/dat-lai-mat-khau', [AuthController::class, 'datLaiMatKhau'])
+    ->middleware('throttle:'.config('auth.reset_password_rate_limit_per_minute').',1');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/dang-xuat', [AuthController::class, 'dangXuat']);
@@ -87,6 +89,8 @@ Route::middleware('auth:sanctum')->group(function () {
             ->middleware('vai_tro:sinh_vien');
         Route::post('/{maPhong}/cap-quyen', [PhongHocController::class, 'capQuyen'])
             ->middleware('vai_tro:giang_vien');
+        Route::post('/{maPhong}/cap-quyen-tat-ca', [PhongHocController::class, 'capQuyenTatCa'])
+            ->middleware('vai_tro:giang_vien');
         Route::post('/{maPhong}/chia-se-trang-thai', [PhongHocController::class, 'chiaSeTrangThai']);
     });
 
@@ -94,6 +98,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('vai_tro:giang_vien')->group(function () {
         Route::get('/lop-day', [LopDayController::class, 'index']);
         Route::get('/lop-day/buoi-hoc', [LopDayController::class, 'buoiHoc']);
+
+        Route::get('/giang-vien/bao-cao/diem-danh/{lopHoc}/xuat', [BaoCaoController::class, 'xuatDiemDanh']);
+        Route::get('/giang-vien/bao-cao/diem/{lopHoc}/xuat', [BaoCaoController::class, 'xuatDiem']);
 
         Route::prefix('giang-vien/diem-danh')->group(function () {
             Route::get('/lop/{lopHoc}/lich-hoc', [QuanLyDiemDanhController::class, 'lichHocCuaLop']);

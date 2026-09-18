@@ -12,6 +12,9 @@
       <span v-if="duLieu.lich_hoc" class="nhan bg-teal-50 text-teal-700 border border-teal-200">
         <i class="fa-regular fa-calendar-check"></i>{{ dinhDangNgay(duLieu.lich_hoc.ngay_hoc) }} · {{ duLieu.lich_hoc.gio_bat_dau }}–{{ duLieu.lich_hoc.gio_ket_thuc }}
       </span>
+      <a v-if="maLopHoc" :href="urlXuatDiemDanh" target="_blank" rel="noopener" class="nut-phu text-sm">
+        <i class="fa-solid fa-file-excel text-emerald-600"></i>Xuất điểm danh
+      </a>
     </div>
 
     <div class="the p-4 mb-5">
@@ -150,6 +153,7 @@ export default {
     }
   },
   computed: {
+    urlXuatDiemDanh() { return `${api.defaults.baseURL}giang-vien/bao-cao/diem-danh/${this.maLopHoc}/xuat?token=${encodeURIComponent(localStorage.getItem('token') || '')}` },
     danhSachLoc() {
       const q = this.tuKhoa.trim().toLowerCase()
       return this.danhSach.filter((sv) => !q || `${sv.ma_sv_text} ${sv.ho_ten}`.toLowerCase().includes(q))

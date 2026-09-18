@@ -228,6 +228,33 @@
                 <i class="fa-solid fa-hand"></i>{{ soGioTay }} giơ tay
               </span>
             </div>
+            <div v-if="laGiangVien" class="border-b border-slate-700/50 bg-slate-900/40 p-3 space-y-3" :aria-busy="!!dangCapQuyenTatCa">
+              <div>
+                <div class="mb-1.5 flex items-center justify-between text-xs font-semibold text-slate-300">
+                  <span><i class="fa-solid fa-microphone mr-1.5 text-emerald-400" aria-hidden="true"></i>Mic tất cả</span>
+                  <span class="font-normal text-slate-500">{{ soSinhVienTrongPhong }} học sinh</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <button class="min-h-9 rounded-lg bg-emerald-500/15 px-2 text-xs font-semibold text-emerald-300 transition-colors hover:bg-emerald-500/25 disabled:cursor-not-allowed disabled:opacity-50" :disabled="!!dangCapQuyenTatCa || !soSinhVienTrongPhong" aria-label="Cho phép tất cả học sinh sử dụng micro" @click="capQuyenTatCa('mic', true)">
+                    <i class="fa-solid mr-1" :class="dangCapQuyenTatCa === 'mic-bat' ? 'fa-spinner fa-spin' : 'fa-microphone'" aria-hidden="true"></i>Cho phép
+                  </button>
+                  <button class="min-h-9 rounded-lg bg-rose-500/15 px-2 text-xs font-semibold text-rose-300 transition-colors hover:bg-rose-500/25 disabled:cursor-not-allowed disabled:opacity-50" :disabled="!!dangCapQuyenTatCa || !soSinhVienTrongPhong" aria-label="Khóa micro của tất cả học sinh" @click="capQuyenTatCa('mic', false)">
+                    <i class="fa-solid mr-1" :class="dangCapQuyenTatCa === 'mic-tat' ? 'fa-spinner fa-spin' : 'fa-microphone-slash'" aria-hidden="true"></i>Khóa
+                  </button>
+                </div>
+              </div>
+              <div>
+                <div class="mb-1.5 text-xs font-semibold text-slate-300"><i class="fa-solid fa-display mr-1.5 text-indigo-400" aria-hidden="true"></i>Chia sẻ tất cả</div>
+                <div class="grid grid-cols-2 gap-2">
+                  <button class="min-h-9 rounded-lg bg-indigo-500/15 px-2 text-xs font-semibold text-indigo-300 transition-colors hover:bg-indigo-500/25 disabled:cursor-not-allowed disabled:opacity-50" :disabled="!!dangCapQuyenTatCa || !soSinhVienTrongPhong" aria-label="Cho phép tất cả học sinh chia sẻ màn hình" @click="capQuyenTatCa('chia_se', true)">
+                    <i class="fa-solid mr-1" :class="dangCapQuyenTatCa === 'chia_se-bat' ? 'fa-spinner fa-spin' : 'fa-display'" aria-hidden="true"></i>Cho phép
+                  </button>
+                  <button class="min-h-9 rounded-lg bg-rose-500/15 px-2 text-xs font-semibold text-rose-300 transition-colors hover:bg-rose-500/25 disabled:cursor-not-allowed disabled:opacity-50" :disabled="!!dangCapQuyenTatCa || !soSinhVienTrongPhong" aria-label="Khóa chia sẻ màn hình của tất cả học sinh" @click="capQuyenTatCa('chia_se', false)">
+                    <i class="fa-solid mr-1" :class="dangCapQuyenTatCa === 'chia_se-tat' ? 'fa-spinner fa-spin' : 'fa-ban'" aria-hidden="true"></i>Khóa
+                  </button>
+                </div>
+              </div>
+            </div>
             <div class="divide-y divide-slate-800 max-h-72 overflow-y-auto">
               <div v-for="tv in thanhVien" :key="tv.ma_tai_khoan" class="px-4 py-2.5 flex items-center justify-between gap-2 text-sm">
                 <span class="flex items-center gap-2 min-w-0">
@@ -282,7 +309,9 @@
           </div>
           <div v-if="tabPhong === 'diem_danh'" class="flex-1 overflow-y-auto p-3">
             <template v-if="laGiangVien">
-              <button class="w-full flex items-center justify-center gap-2 py-3 mb-4 bg-teal-600 text-white rounded-xl hover:bg-teal-700 text-sm font-medium" :disabled="phienHienTai !== null" @click="moPhienDiemDanh"><i class="fa-solid fa-qrcode"></i>Tạo mã QR điểm danh</button>
+              <button v-if="!phienHienTai" class="w-full min-h-11 flex items-center justify-center gap-2 py-3 mb-4 bg-teal-600 text-white rounded-xl hover:bg-teal-700 text-sm font-medium" @click="moPhienDiemDanh"><i class="fa-solid fa-qrcode" aria-hidden="true"></i>Tạo mã QR điểm danh</button>
+              <button v-else class="w-full min-h-11 flex items-center justify-center gap-2 py-3 mb-2 bg-rose-600 text-white rounded-xl hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60 text-sm font-semibold" :disabled="dangDongPhien" aria-label="Đóng phiên điểm danh và đánh dấu vắng" @click="dongPhien"><i class="fa-solid" :class="dangDongPhien ? 'fa-spinner fa-spin' : 'fa-circle-stop'" aria-hidden="true"></i>{{ dangDongPhien ? 'Đang đóng phiên...' : 'Đóng phiên điểm danh' }}</button>
+              <p v-if="phienHienTai" class="mb-4 text-center text-xs text-slate-400">Phiên {{ phienHienTai.ma_phien }} · còn {{ demNguocGv }}</p>
               <div class="flex items-center justify-between gap-2 mb-3"><p class="text-xs font-semibold text-slate-300">{{ soCoMat }}/{{ danhSachDiemDanh.length }} đã điểm danh</p><div class="flex gap-1"><span v-if="soVangCoPhep" class="nhan bg-sky-500/15 text-sky-400">{{ soVangCoPhep }} có phép</span><span class="nhan bg-emerald-500/15 text-emerald-400">{{ danhSachDiemDanh.length ? Math.round(soCoMat / danhSachDiemDanh.length * 100) : 0 }}%</span></div></div>
               <div class="space-y-1.5">
                 <div v-for="sv in danhSachDiemDanh" :key="sv.ma_sinh_vien" class="flex items-center gap-2.5 px-2.5 py-2 rounded-xl bg-slate-700/40">
@@ -359,6 +388,8 @@ export default {
 
       // Quyền trong phòng (GV mặc định đủ quyền; SV chờ GV cấp)
       quyenToi: { la_giang_vien: false, mac: false, chia_se: false, gio_tay: false },
+      dangCapQuyenTatCa: null,
+      dangDongPhien: false,
 
       echo: null,
     }
@@ -378,6 +409,9 @@ export default {
     },
     soGioTay() {
       return this.thanhVien.filter((tv) => tv.gio_tay).length
+    },
+    soSinhVienTrongPhong() {
+      return this.thanhVien.filter((tv) => tv.vai_tro === 'sinh_vien').length
     },
     conLaiGiay() {
       return this.giayConLai
@@ -504,7 +538,7 @@ export default {
 
     async batTatChiaSe() {
       if (!this.agoraClient) return
-      if (!this.quyenToi.chia_se && !this.laGiangVien) {
+      if (!this.dangChiaSe && !this.quyenToi.chia_se && !this.laGiangVien) {
         alert('Giáo viên chưa cấp quyền chia sẻ màn hình. Hãy giơ tay để xin quyền.')
         return
       }
@@ -551,11 +585,46 @@ export default {
     },
 
     async capQuyenCho(tv, { mic, chiaSe }) {
-      await api.post(`/phong/${this.phong.ma_phong}/cap-quyen`, {
-        ma_tai_khoan: tv.ma_tai_khoan,
-        duoc_phep_mac: mic,
-        duoc_phep_chia_se: chiaSe,
-      })
+      try {
+        await api.post(`/phong/${this.phong.ma_phong}/cap-quyen`, {
+          ma_tai_khoan: tv.ma_tai_khoan,
+          duoc_phep_mac: mic,
+          duoc_phep_chia_se: chiaSe,
+        })
+        tv.duoc_phep_mac = mic
+        tv.duoc_phep_chia_se = chiaSe
+        if (mic || chiaSe) tv.gio_tay = false
+        if (!chiaSe) tv.dang_chia_se = false
+      } catch (error) {
+        this.$toast?.show?.(error.response?.data?.message || 'Không thể cập nhật quyền học sinh.', { type: 'error', duration: 5000 })
+      }
+    },
+
+    async capQuyenTatCa(loaiQuyen, duocPhep) {
+      if (!this.soSinhVienTrongPhong || this.dangCapQuyenTatCa) return
+      this.dangCapQuyenTatCa = `${loaiQuyen}-${duocPhep ? 'bat' : 'tat'}`
+
+      try {
+        const { data } = await api.post(`/phong/${this.phong.ma_phong}/cap-quyen-tat-ca`, {
+          loai_quyen: loaiQuyen,
+          duoc_phep: duocPhep,
+        })
+
+        this.thanhVien.forEach((tv) => {
+          if (tv.vai_tro !== 'sinh_vien') return
+          if (loaiQuyen === 'mic') tv.duoc_phep_mac = duocPhep
+          if (loaiQuyen === 'chia_se') {
+            tv.duoc_phep_chia_se = duocPhep
+            if (!duocPhep) tv.dang_chia_se = false
+          }
+          if (duocPhep) tv.gio_tay = false
+        })
+        this.$toast?.show?.(data.message, { type: 'success', duration: 3500 })
+      } catch (error) {
+        this.$toast?.show?.(error.response?.data?.message || 'Không thể cập nhật quyền cho tất cả học sinh.', { type: 'error', duration: 5000 })
+      } finally {
+        this.dangCapQuyenTatCa = null
+      }
     },
 
     // ---------- Bố cục kiểu Zoom ----------
@@ -725,10 +794,7 @@ export default {
           await this.xuLyTrangThaiDiemDanhCapNhat(e)
         })
         .listen('.phien.diem.danh.dong', async () => {
-          this.hienQr = false
-          this.phienHienTai = null
-          this.giayConLai = 0
-          this.dungXoayQr()
+          this.datTrangThaiPhienDaDong()
           if (this.laGiangVien) await this.taiDanhSach()
         })
         .listen('.tin.nhan.moi', (e) => {
@@ -935,12 +1001,31 @@ export default {
       const id = await this.layIdPhien()
       if (!id) return
       if (!confirm('Đóng phiên và đánh dấu vắng những sinh viên chưa điểm danh?')) return
-      const { data } = await api.post(`/phien-diem-danh/${id}/dong`)
-      alert(data.message)
+      this.dangDongPhien = true
+
+      try {
+        const { data } = await api.post(`/phien-diem-danh/${id}/dong`)
+        this.datTrangThaiPhienDaDong()
+        this.$toast?.show?.(data.message, { type: 'success', duration: 3500 })
+        await this.taiDanhSach()
+      } catch (error) {
+        this.$toast?.show?.(error.response?.data?.message || 'Không thể đóng phiên điểm danh.', { type: 'error', duration: 5000 })
+      } finally {
+        this.dangDongPhien = false
+      }
+    },
+
+    datTrangThaiPhienDaDong() {
+      if (this.dongHo) {
+        clearInterval(this.dongHo)
+        this.dongHo = null
+      }
       this.phienHienTai = null
       this.hienQr = false
+      this.giayConLai = 0
+      this.demNguoc = '00:00'
+      this.demNguocGv = '00:00'
       this.dungXoayQr()
-      await this.taiDanhSach()
     },
 
     async ketThucPhong() {

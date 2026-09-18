@@ -3,26 +3,24 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\ForgotPasswordRequest;
+use App\Http\Requests\Auth\ResetPasswordRequest;
 use App\Models\User;
+use App\Services\Auth\PasswordResetService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
     /** Request a short-lived password reset link without revealing whether an email exists. */
-    public function guiLienKetDatLaiMatKhau(Request $request): JsonResponse
+    public function guiLienKetDatLaiMatKhau(
+        ForgotPasswordRequest $request,
+        PasswordResetService $passwordReset,
+    ): JsonResponse
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-        ], [
-            'email.required' => 'Vui lòng nhập email.',
-            'email.email' => 'Email không hợp lệ.',
-        ]);
-
-        Password::sendResetLink($credentials);
+        $passwordReset->yeuCau((string) $request->validated('email'));
 
         return response()->json([
             'message' => 'Nếu email tồn tại, liên kết đặt lại mật khẩu đã được gửi.',
@@ -30,28 +28,16 @@ class AuthController extends Controller
     }
 
     /** Complete a password reset issued by the request endpoint. */
-    public function datLaiMatKhau(Request $request): JsonResponse
+    public function datLaiMatKhau(
+        ResetPasswordRequest $request,
+        PasswordResetService $passwordReset,
+    ): JsonResponse
     {
-        $credentials = $request->validate([
-            'token' => ['required', 'string'],
-            'email' => ['required', 'email'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-        ], [
-            'token.required' => 'Liên kết đặt lại mật khẩu không hợp lệ.',
-            'password.confirmed' => 'Mật khẩu xác nhận không khớp.',
-            'password.min' => 'Mật khẩu phải có ít nhất 8 ký tự.',
-        ]);
-
-        $status = Password::reset($credentials, function (User $user, string $password): void {
-            $user->forceFill(['mat_khau' => $password])->save();
-            $user->tokens()->delete();
-        });
-
-        if ($status !== Password::PASSWORD_RESET) {
-            return response()->json([
-                'message' => 'Liên kết đã hết hạn hoặc không hợp lệ. Vui lòng yêu cầu liên kết mới.',
-            ], 422);
-        }
+        $passwordReset->datLai(
+            (string) $request->validated('email'),
+            (string) $request->validated('token'),
+            (string) $request->validated('password'),
+        );
 
         return response()->json(['message' => 'Đặt lại mật khẩu thành công.']);
     }

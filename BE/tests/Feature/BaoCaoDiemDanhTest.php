@@ -9,6 +9,7 @@ use App\Models\GiangVien;
 use App\Models\LichHoc;
 use App\Models\LopHoc;
 use App\Models\MonHoc;
+use App\Models\PhanCongGiangDay;
 use App\Models\PhienDiemDanh;
 use App\Models\SinhVien;
 use App\Models\User;
@@ -28,6 +29,8 @@ class BaoCaoDiemDanhTest extends TestCase
     private SinhVien $sinhVien;
 
     private GiangVien $giangVien;
+
+    private User $taiKhoanGiangVien;
 
     private LichHoc $lichHoc;
 
@@ -59,10 +62,15 @@ class BaoCaoDiemDanhTest extends TestCase
             'trang_thai' => 'dang_hoc',
         ]);
 
-        $taiKhoanGiangVien = $this->taoTaiKhoan('giang_vien', 'gv', 'Giảng viên kiểm thử');
+        $this->taiKhoanGiangVien = $this->taoTaiKhoan('giang_vien', 'gv', 'Giảng viên kiểm thử');
         $this->giangVien = GiangVien::create([
             'ma_giang_vien' => 'GV001',
-            'ma_tai_khoan' => $taiKhoanGiangVien->id,
+            'ma_tai_khoan' => $this->taiKhoanGiangVien->id,
+        ]);
+        PhanCongGiangDay::create([
+            'ma_giang_vien' => $this->giangVien->id,
+            'ma_lop_hoc' => $this->lopHoc->id,
+            'vai_tro_phu_trach' => 'giang_vien_chinh',
         ]);
 
         $taiKhoanSinhVien = $this->taoTaiKhoan('sinh_vien', 'sv', 'Sinh viên kiểm thử');
@@ -137,6 +145,28 @@ class BaoCaoDiemDanhTest extends TestCase
             1,
             '0%',
         ], $export->collection()->first());
+    }
+
+    public function test_giang_vien_duoc_xuat_diem_danh_va_diem_cua_lop_duoc_phan_cong(): void
+    {
+        Sanctum::actingAs($this->taiKhoanGiangVien);
+
+        $this->get("/api/giang-vien/bao-cao/diem-danh/{$this->lopHoc->id}/xuat")
+            ->assertOk()
+            ->assertHeader('content-disposition');
+        $this->get("/api/giang-vien/bao-cao/diem/{$this->lopHoc->id}/xuat")
+            ->assertOk()
+            ->assertHeader('content-disposition');
+    }
+
+    public function test_giang_vien_khong_duoc_xuat_lop_chua_duoc_phan_cong(): void
+    {
+        PhanCongGiangDay::query()->delete();
+        Sanctum::actingAs($this->taiKhoanGiangVien);
+
+        $this->getJson("/api/giang-vien/bao-cao/diem/{$this->lopHoc->id}/xuat")
+            ->assertForbidden()
+            ->assertJsonPath('message', 'Bạn không được phân công phụ trách lớp học này.');
     }
 
     private function taoTaiKhoan(string $vaiTro, string $ma, string $hoTen): User

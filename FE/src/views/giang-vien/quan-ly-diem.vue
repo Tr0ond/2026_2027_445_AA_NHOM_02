@@ -2,7 +2,10 @@
   <div>
     <div class="mb-5 flex items-end justify-between gap-4 flex-wrap">
       <div><div class="flex items-center gap-2 text-xs text-slate-400 mb-1.5"><router-link :to="{ name: 'giang-vien-trang-chu' }" class="hover:text-teal-600">Tổng quan</router-link><i class="fa-solid fa-chevron-right text-[9px]"></i><span class="text-slate-600">Nhập điểm</span></div><h1 class="text-2xl font-bold text-slate-900">Nhập điểm</h1></div>
-      <button class="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-semibold rounded-xl hover:bg-teal-700 shadow-sm" :disabled="!lopChon" @click="dongBoChuyenCan"><i class="fa-solid fa-rotate"></i>Đồng bộ chuyên cần</button>
+      <div class="flex flex-wrap items-center gap-2">
+        <a v-if="lopChon" :href="urlXuatDiem" target="_blank" rel="noopener" class="nut-phu text-sm"><i class="fa-solid fa-file-excel text-emerald-600"></i>Xuất bảng điểm</a>
+        <button class="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-semibold rounded-xl hover:bg-teal-700 shadow-sm" :disabled="!lopChon" @click="dongBoChuyenCan"><i class="fa-solid fa-rotate"></i>Đồng bộ chuyên cần</button>
+      </div>
     </div>
 
     <div class="flex items-center gap-2 mb-5 overflow-x-auto pb-1"><button v-for="l in lops" :key="l.id" class="shrink-0 px-4 py-2 rounded-xl text-sm font-medium border transition-colors" :class="lopChon === l.id ? 'bg-teal-600 text-white border-teal-600' : 'bg-white text-slate-600 border-slate-200 hover:border-teal-300'" @click="chonLop(l.id)">{{ l.ma_lop_hoc || l.ten_lop }}</button></div>
@@ -69,6 +72,7 @@ export default {
     this.lops = data.danh_sach
   },
   computed: {
+    urlXuatDiem() { return `${api.defaults.baseURL}giang-vien/bao-cao/diem/${this.lopChon}/xuat?token=${encodeURIComponent(localStorage.getItem('token') || '')}` },
     lopDangChon() { return this.lops.find((l) => l.id === this.lopChon) },
     soDaNhap() { const tp = this.thanhPhan[0]; return tp ? this.danhSach.filter((s) => s.diem[tp.id] !== null && s.diem[tp.id] !== undefined).length : 0 },
     diemTongKetHopLe() { return this.danhSach.map((s) => Number(s.diem_tong_ket)).filter(Number.isFinite) },
