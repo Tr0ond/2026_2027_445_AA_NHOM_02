@@ -63,6 +63,8 @@ class BaoCaoController extends Controller
     /** US17 - Tải Excel báo cáo điểm danh lớp. */
     public function xuatDiemDanh(Request $request, LopHoc $lopHoc): BinaryFileResponse
     {
+        $this->baoDamDuocXuatBaoCao($request, $lopHoc);
+
         return Excel::download(
             new BaoCaoDiemDanhExport($lopHoc),
             'diem-danh-'.$lopHoc->ma_lop_hoc.'-'.now()->format('Ymd').'.xlsx'
@@ -72,9 +74,28 @@ class BaoCaoController extends Controller
     /** US24 - Tải Excel bảng điểm lớp. */
     public function xuatDiem(Request $request, LopHoc $lopHoc): BinaryFileResponse
     {
+        $this->baoDamDuocXuatBaoCao($request, $lopHoc);
+
         return Excel::download(
             new BaoCaoDiemExport($lopHoc),
             'diem-'.$lopHoc->ma_lop_hoc.'-'.now()->format('Ymd').'.xlsx'
+        );
+    }
+
+    /** Admin được xuất mọi lớp; giảng viên chỉ được xuất lớp đã phân công. */
+    private function baoDamDuocXuatBaoCao(Request $request, LopHoc $lopHoc): void
+    {
+        $taiKhoan = $request->user();
+
+        if ($taiKhoan?->laAdmin()) {
+            return;
+        }
+
+        $giangVien = $taiKhoan?->giangVien;
+        abort_unless(
+            $giangVien && $lopHoc->phanCong()->where('ma_giang_vien', $giangVien->id)->exists(),
+            403,
+            'Bạn không được phân công phụ trách lớp học này.'
         );
     }
 }

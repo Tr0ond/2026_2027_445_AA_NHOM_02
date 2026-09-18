@@ -59,6 +59,7 @@ class LopDayController extends Controller
                 'gio_ket_thuc' => $lich->gio_ket_thuc?->format('H:i'),
                 'co_hoc_truc_tuyen' => $lich->co_hoc_truc_tuyen,
                 'trang_thai' => $lich->trang_thai,
+                'da_qua_gio_hoc' => $lich->daQuaGioHoc(),
                 'phong' => $lich->phongTrucTuyen ? [
                     'ma_phong' => $lich->phongTrucTuyen->ma_phong,
                     'trang_thai' => $lich->phongTrucTuyen->trang_thai,
@@ -68,4 +69,3 @@ class LopDayController extends Controller
         return response()->json(['danh_sach' => $buois]);
     }
 }
-

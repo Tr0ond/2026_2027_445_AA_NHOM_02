@@ -6,8 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\GiangVien;
 use App\Models\LopHoc;
 use App\Models\PhanCongGiangDay;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 /** US21 - Phân công giảng dạy. */
 class PhanCongController extends Controller
@@ -54,19 +57,29 @@ class PhanCongController extends Controller
     {
         $data = $request->validate([
             'ma_giang_vien' => ['required', 'integer', 'exists:giang_vien,id'],
-            'ma_lop_hoc' => ['required', 'integer', 'exists:lop_hoc,id'],
+            'ma_lop_hoc' => [
+                'required',
+                'integer',
+                'exists:lop_hoc,id',
+                Rule::unique('phan_cong_giang_day', 'ma_lop_hoc'),
+            ],
             'vai_tro_phu_trach' => ['nullable', 'string', 'max:50'],
+        ], [
+            'ma_lop_hoc.unique' => 'Lớp học này đã được phân công cho một giảng viên.',
         ]);
 
-        $tonTai = PhanCongGiangDay::where('ma_giang_vien', $data['ma_giang_vien'])
-            ->where('ma_lop_hoc', $data['ma_lop_hoc'])
-            ->exists();
+        try {
+            PhanCongGiangDay::create($data + ['vai_tro_phu_trach' => $data['vai_tro_phu_trach'] ?? 'giang_vien_chinh']);
+        } catch (QueryException $exception) {
+            // Ràng buộc unique trong CSDL xử lý cả trường hợp hai yêu cầu đến đồng thời.
+            if (PhanCongGiangDay::where('ma_lop_hoc', $data['ma_lop_hoc'])->exists()) {
+                throw ValidationException::withMessages([
+                    'ma_lop_hoc' => 'Lớp học này đã được phân công cho một giảng viên.',
+                ]);
+            }
 
-        if ($tonTai) {
-            return response()->json(['message' => 'Giảng viên này đã được phân công cho lớp.'], 422);
+            throw $exception;
         }
-
-        PhanCongGiangDay::create($data + ['vai_tro_phu_trach' => $data['vai_tro_phu_trach'] ?? 'giang_vien_chinh']);
 
         return response()->json(['message' => 'Đã phân công giảng dạy.'], 201);
     }

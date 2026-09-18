@@ -23,6 +23,7 @@ use App\Models\SinhVien;
 use App\Models\ThanhVienPhongTrucTuyen;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Event;
 use Laravel\Sanctum\Sanctum;
@@ -52,6 +53,7 @@ class PhongHocTrucTuyenTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        Carbon::setTestNow(Carbon::now()->startOfDay()->setTime(9, 0));
         config(['services.agora.app_id' => null, 'services.agora.certificate' => null, 'app.fe_url' => 'http://localhost:5173']);
         $mon = MonHoc::create(['ma_mon_hoc' => 'ROOM', 'ten_mon' => 'Kiểm thử phòng học', 'so_tin_chi' => 3]);
         $this->lop = LopHoc::create([
@@ -79,6 +81,12 @@ class PhongHocTrucTuyenTest extends TestCase
         ]);
     }
 
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
+    }
+
     public function test_giang_vien_mo_phong_va_bam_lai_khong_tao_trung(): void
     {
         $ma = $this->moPhong();
@@ -100,6 +108,37 @@ class PhongHocTrucTuyenTest extends TestCase
             $this->lich->update(['co_hoc_truc_tuyen' => true, 'trang_thai' => $trangThai]);
             $this->postJson('/api/phong/bat-dau', ['ma_lich_hoc' => $this->lich->id])->assertUnprocessable();
         }
+        $this->assertDatabaseCount('phong_hoc_truc_tuyen', 0);
+    }
+
+    public function test_khong_mo_phong_khi_ngay_hoc_da_qua_nhung_trang_thai_van_la_ke_hoach(): void
+    {
+        $this->lich->update(['ngay_hoc' => now()->subDay()->toDateString()]);
+        Sanctum::actingAs($this->gv);
+
+        $this->postJson('/api/phong/bat-dau', ['ma_lich_hoc' => $this->lich->id])
+            ->assertUnprocessable()
+            ->assertJsonPath('message', 'Buổi học đã qua giờ kết thúc, không thể mở phòng học trực tuyến.');
+        $this->getJson('/api/lop-day/buoi-hoc')
+            ->assertOk()
+            ->assertJsonPath('danh_sach.0.da_qua_gio_hoc', true);
+
+        $this->assertDatabaseCount('phong_hoc_truc_tuyen', 0);
+        $this->assertDatabaseHas('lich_hoc', [
+            'id' => $this->lich->id,
+            'trang_thai' => 'ke_hoach',
+        ]);
+    }
+
+    public function test_khong_mo_phong_sau_gio_ket_thuc_trong_cung_ngay(): void
+    {
+        Carbon::setTestNow(now()->startOfDay()->setTime(10, 1));
+        Sanctum::actingAs($this->gv);
+
+        $this->postJson('/api/phong/bat-dau', ['ma_lich_hoc' => $this->lich->id])
+            ->assertUnprocessable()
+            ->assertJsonPath('message', 'Buổi học đã qua giờ kết thúc, không thể mở phòng học trực tuyến.');
+
         $this->assertDatabaseCount('phong_hoc_truc_tuyen', 0);
     }
 
@@ -249,6 +288,72 @@ class PhongHocTrucTuyenTest extends TestCase
         $this->assertDatabaseHas('thanh_vien_phong_truc_tuyen', ['ma_tai_khoan' => $this->sv->id, 'dang_chia_se' => false]);
         Event::assertDispatched(CapQuyenPhong::class, fn ($e) => $e->maPhong === $ma && ! $e->duocPhepMac && ! $e->duocPhepChiaSe);
         Event::assertDispatched(NguoiChiaSeManHinh::class, fn ($e) => $e->maPhong === $ma && ! $e->dangChiaSe);
+    }
+
+    public function test_giang_vien_cap_va_thu_hoi_quyen_cho_tat_ca_sinh_vien(): void
+    {
+        $ma = $this->moVaVaoPhong();
+        $taiKhoanHai = $this->taiKhoan('sinh_vien', 'sv-room-2');
+        $sinhVienHai = SinhVien::create(['ma_sinh_vien' => 'SVROOM2', 'ma_tai_khoan' => $taiKhoanHai->id]);
+        DangKyLopHoc::create([
+            'ma_sinh_vien' => $sinhVienHai->id,
+            'ma_lop_hoc' => $this->lop->id,
+            'ngay_dang_ky' => now()->toDateString(),
+            'trang_thai' => 'da_duyet',
+        ]);
+        Sanctum::actingAs($taiKhoanHai);
+        $this->postJson("/api/phong/$ma/tham-gia")->assertOk();
+
+        Sanctum::actingAs($this->gv);
+        $this->postJson("/api/phong/$ma/cap-quyen-tat-ca", [
+            'loai_quyen' => 'mic',
+            'duoc_phep' => true,
+        ])->assertOk()->assertJsonPath('so_sinh_vien', 2);
+        $this->postJson("/api/phong/$ma/cap-quyen-tat-ca", [
+            'loai_quyen' => 'chia_se',
+            'duoc_phep' => true,
+        ])->assertOk()->assertJsonPath('so_sinh_vien', 2);
+
+        $this->assertSame(2, ThanhVienPhongTrucTuyen::where('vai_tro', 'sinh_vien')
+            ->where('duoc_phep_mac', true)
+            ->where('duoc_phep_chia_se', true)
+            ->count());
+
+        ThanhVienPhongTrucTuyen::where('ma_tai_khoan', $this->sv->id)
+            ->update(['dang_chia_se' => true]);
+        $this->postJson("/api/phong/$ma/cap-quyen-tat-ca", [
+            'loai_quyen' => 'chia_se',
+            'duoc_phep' => false,
+        ])->assertOk()->assertJsonPath('so_sinh_vien', 2);
+        $this->postJson("/api/phong/$ma/cap-quyen-tat-ca", [
+            'loai_quyen' => 'mic',
+            'duoc_phep' => false,
+        ])->assertOk()->assertJsonPath('so_sinh_vien', 2);
+
+        $this->assertSame(2, ThanhVienPhongTrucTuyen::where('vai_tro', 'sinh_vien')
+            ->where('duoc_phep_mac', false)
+            ->where('duoc_phep_chia_se', false)
+            ->where('dang_chia_se', false)
+            ->count());
+        Event::assertDispatched(CapQuyenPhong::class, fn ($e) => $e->maPhong === $ma
+            && ! $e->duocPhepMac && ! $e->duocPhepChiaSe);
+        Event::assertDispatched(NguoiChiaSeManHinh::class, fn ($e) => $e->maPhong === $ma
+            && $e->maTaiKhoan === $this->sv->id && ! $e->dangChiaSe);
+    }
+
+    public function test_sinh_vien_va_giang_vien_ngoai_lop_khong_duoc_cap_quyen_tat_ca(): void
+    {
+        $ma = $this->moVaVaoPhong();
+        $payload = ['loai_quyen' => 'mic', 'duoc_phep' => true];
+
+        $this->postJson("/api/phong/$ma/cap-quyen-tat-ca", $payload)->assertForbidden();
+        Sanctum::actingAs($this->giangVienNgoaiLop());
+        $this->postJson("/api/phong/$ma/cap-quyen-tat-ca", $payload)->assertForbidden();
+
+        $this->assertDatabaseHas('thanh_vien_phong_truc_tuyen', [
+            'ma_tai_khoan' => $this->sv->id,
+            'duoc_phep_mac' => false,
+        ]);
     }
 
     public function test_sinh_vien_va_giang_vien_ngoai_lop_khong_duoc_cap_quyen(): void

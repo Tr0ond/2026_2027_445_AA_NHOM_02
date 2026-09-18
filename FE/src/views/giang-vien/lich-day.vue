@@ -35,7 +35,7 @@
             <span><i class="fa-solid fa-location-dot mr-1.5"></i>{{ buoiKeTiep.co_hoc_truc_tuyen ? 'Trực tuyến' : (buoiKeTiep.phong_hoc || 'Chưa cập nhật phòng') }}</span>
           </div>
           <div class="mt-5 flex flex-wrap gap-3">
-            <button v-if="buoiKeTiep.co_hoc_truc_tuyen && !buoiKeTiep.phong" class="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-teal-700 disabled:opacity-60" :disabled="dangMo === buoiKeTiep.id" @click="batDauDay(buoiKeTiep)">
+            <button v-if="buoiKeTiep.co_hoc_truc_tuyen && !buoiKeTiep.phong && !buoiKeTiep.da_qua_gio_hoc" class="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-teal-700 disabled:opacity-60" :disabled="dangMo === buoiKeTiep.id" @click="batDauDay(buoiKeTiep)">
               <i class="fa-solid" :class="dangMo === buoiKeTiep.id ? 'fa-spinner fa-spin' : 'fa-video'"></i>Mở phòng học
             </button>
             <button v-if="buoiKeTiep.phong?.trang_thai === 'dang_dien_ra'" class="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-teal-700" @click="vaoPhong(buoiKeTiep.phong.ma_phong)">
@@ -88,13 +88,14 @@
         <div v-if="!danhSach.length" class="p-12 text-center text-sm text-slate-400">Chưa có lịch dạy.</div>
         <div v-else class="overflow-x-auto">
           <table class="bang">
-            <thead><tr><th>Ngày</th><th>Môn học</th><th>Lớp</th><th>Giờ học</th><th>Phòng</th></tr></thead>
+            <thead><tr><th>Ngày</th><th>Môn học</th><th>Lớp</th><th>Giờ học</th><th>Trạng thái</th><th>Phòng</th></tr></thead>
             <tbody>
               <tr v-for="buoi in danhSach" :key="buoi.id">
                 <td>{{ dinhDangNgay(buoi.ngay_hoc) }}</td>
                 <td class="font-semibold">{{ buoi.mon_hoc }}</td>
                 <td>{{ buoi.ten_lop }}</td>
                 <td>{{ buoi.gio_bat_dau }}–{{ buoi.gio_ket_thuc }}</td>
+                <td><span v-if="buoi.da_qua_gio_hoc" class="nhan bg-slate-100 text-slate-600">Đã qua giờ</span><span v-else class="nhan bg-emerald-50 text-emerald-700">Sắp tới</span></td>
                 <td>{{ buoi.phong_hoc || '—' }}</td>
               </tr>
             </tbody>
@@ -123,13 +124,13 @@ export default {
   computed: {
     auth() { return useAuthStore() },
     buoiKeTiep() {
-      return this.danhSach.find((buoi) => !['da_hoc', 'da_huy'].includes(buoi.trang_thai)) || null
+      return this.danhSach.find((buoi) => !buoi.da_qua_gio_hoc && !['da_hoc', 'da_huy'].includes(buoi.trang_thai)) || null
     },
     thongKe() {
       return [
         { nhan: 'Lớp đang dạy', giaTri: this.lops.length, icon: 'fa-solid fa-chalkboard', mau: 'bg-teal-50 text-teal-600' },
         { nhan: 'Tổng sinh viên', giaTri: this.lops.reduce((tong, lop) => tong + Number(lop.so_sinh_vien || 0), 0), icon: 'fa-solid fa-users', mau: 'bg-brand-50 text-brand-600' },
-        { nhan: 'Buổi sắp tới', giaTri: this.danhSach.filter((buoi) => !['da_hoc', 'da_huy'].includes(buoi.trang_thai)).length, icon: 'fa-solid fa-calendar-check', mau: 'bg-amber-50 text-amber-600' },
+        { nhan: 'Buổi sắp tới', giaTri: this.danhSach.filter((buoi) => !buoi.da_qua_gio_hoc && !['da_hoc', 'da_huy'].includes(buoi.trang_thai)).length, icon: 'fa-solid fa-calendar-check', mau: 'bg-amber-50 text-amber-600' },
       ]
     },
   },
@@ -154,6 +155,10 @@ export default {
       }
     },
     async batDauDay(buoi) {
+      if (buoi.da_qua_gio_hoc) {
+        this.loi = 'Buổi học đã qua giờ kết thúc, không thể mở phòng học trực tuyến.'
+        return
+      }
       this.dangMo = buoi.id
       this.loi = ''
       try {
