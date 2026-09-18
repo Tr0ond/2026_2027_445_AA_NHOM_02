@@ -24,7 +24,7 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-5">
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2 mb-5">
       <button v-for="ngay in cacNgayHienThi" :key="'pill-' + ngay.iso" class="rounded-xl p-2.5 text-center transition-all"
         :class="ngay.la_hom_nay ? 'bg-brand-600 text-white shadow-md' : ngay.buois.length ? 'bg-white border border-slate-200 text-slate-700' : 'bg-slate-50 border border-slate-100 text-slate-400'">
         <p class="text-xs font-bold" :class="ngay.la_hom_nay ? 'text-indigo-200' : ''">{{ ngay.thu }}</p>
@@ -33,7 +33,7 @@
       </button>
     </div>
 
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
       <div v-for="ngay in cacNgayHienThi" :key="ngay.iso" class="rounded-[14px] border overflow-hidden" :class="ngay.la_hom_nay ? 'border-brand-300 shadow-md' : 'border-slate-200'">
         <div class="px-3 py-2.5 text-center border-b" :class="ngay.la_hom_nay ? 'bg-brand-600 border-brand-500' : 'bg-white border-slate-100'">
           <p class="text-xs font-bold" :class="ngay.la_hom_nay ? 'text-indigo-200' : 'text-slate-600'">{{ tenThuDayDu(ngay.iso).toUpperCase() }}</p>
@@ -122,7 +122,7 @@ export default {
       }
       return ketQua
     },
-    cacNgayHienThi() { return this.cacNgay.slice(0, 6) },
+    cacNgayHienThi() { return this.cacNgay.slice(0, 7) },
     laTuanHienTai() {
       const homNay = new Date()
       return this.isoDate(homNay) >= this.isoDate(this.tuanBatDau) && this.isoDate(homNay) <= this.isoDate(this.tuanKetThuc)
