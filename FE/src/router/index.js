@@ -11,6 +11,18 @@ const routes = [
     component: () => import('../views/auth/dang-nhap.vue'),
     meta: { layout: 'blank', khongCanDangNhap: true },
   },
+  {
+    path: '/quen-mat-khau',
+    name: 'quen-mat-khau',
+    component: () => import('../views/auth/quen-mat-khau.vue'),
+    meta: { layout: 'blank', khongCanDangNhap: true },
+  },
+  {
+    path: '/dat-lai-mat-khau',
+    name: 'dat-lai-mat-khau',
+    component: () => import('../views/auth/dat-lai-mat-khau.vue'),
+    meta: { layout: 'blank', khongCanDangNhap: true },
+  },
 
   // ---- Mobile: quét QR điểm danh (US08) ----
   {

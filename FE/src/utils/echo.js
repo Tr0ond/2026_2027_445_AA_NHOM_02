@@ -1,5 +1,6 @@
 import Echo from 'laravel-echo'
 import Pusher from 'pusher-js'
+import { apiUrl } from './api'
 
 window.Pusher = Pusher
 
@@ -32,7 +33,7 @@ export function taoEcho(token) {
     wssPort: import.meta.env.VITE_REVERB_PORT || 8080,
     forceTLS: false,
     enabledTransports: ['ws', 'wss'],
-    authEndpoint: (import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api/') + 'broadcasting/auth',
+    authEndpoint: apiUrl('broadcasting/auth'),
     auth: {
       headers: {
         Authorization: `Bearer ${token}`,

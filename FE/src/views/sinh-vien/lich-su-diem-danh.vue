@@ -8,7 +8,7 @@
 
     <div class="the p-5 mb-5"><div class="flex items-center justify-between mb-2"><p class="text-sm font-semibold text-slate-800">Tỷ lệ chuyên cần tổng thể</p><p class="text-xl font-bold" :class="tyLe >= 80 ? 'text-emerald-600' : tyLe >= 65 ? 'text-amber-600' : 'text-rose-600'">{{ tyLe }}%</p></div><div class="h-3 bg-slate-100 rounded-full overflow-hidden"><div class="h-full rounded-full" :class="tyLe >= 80 ? 'bg-emerald-500' : tyLe >= 65 ? 'bg-amber-400' : 'bg-rose-500'" :style="{ width: tyLe + '%' }"></div></div><p class="text-xs text-slate-500 mt-1.5">Yêu cầu tối thiểu: 80% để đủ điều kiện dự thi cuối kỳ</p></div>
 
-    <div class="flex flex-wrap items-center gap-3 mb-5"><div class="relative flex-1 min-w-[190px] max-w-xs"><i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i><input v-model="tuKhoa" class="o-nhap !pl-8 !py-2" placeholder="Tìm môn học..."></div><select v-model="locTrangThai" class="o-nhap !w-auto !py-2"><option value="">Tất cả trạng thái</option><option value="co_mat">Có mặt</option><option value="vang">Vắng mặt</option><option value="di_muon">Đi muộn</option><option value="vang_co_phep">Vắng có phép</option></select><button class="nut-phu ml-auto"><i class="fa-solid fa-download text-xs"></i>Xuất file</button></div>
+    <div class="flex flex-wrap items-center gap-3 mb-5"><div class="relative flex-1 min-w-[190px] max-w-xs"><i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i><input v-model="tuKhoa" class="o-nhap !pl-8 !py-2" placeholder="Tìm môn học..."></div><select v-model="locTrangThai" class="o-nhap !w-auto !py-2"><option value="">Tất cả trạng thái</option><option value="co_mat">Có mặt</option><option value="vang">Vắng mặt</option><option value="di_muon">Đi muộn</option><option value="vang_co_phep">Vắng có phép</option></select><button class="nut-phu ml-auto" @click="xuatLichSu"><i class="fa-solid fa-download text-xs"></i>Xuất file</button></div>
 
     <div class="the overflow-hidden">
         <div class="overflow-x-auto">
@@ -39,6 +39,7 @@
 
 <script>
 import api from '../../utils/axios'
+import { taiCsv } from '../../utils/export'
 
 export default {
   name: 'lich-su-diem-danh',
@@ -63,6 +64,16 @@ export default {
     this.danhSach = data.danh_sach || []
   },
   methods: {
+    xuatLichSu() {
+      taiCsv('lich-su-diem-danh.csv', [
+        { label: 'Ngày học', value: (x) => x.ngay_hoc },
+        { label: 'Môn học', value: (x) => x.mon_hoc },
+        { label: 'Lớp', value: (x) => x.ten_lop },
+        { label: 'Thời gian điểm danh', value: (x) => x.thoi_gian_diem_danh || '' },
+        { label: 'Hình thức', value: (x) => this.tenHinhThuc(x.hinh_thuc_diem_danh) },
+        { label: 'Trạng thái', value: (x) => this.tenTrangThai(x.trang_thai_diem_danh) },
+      ], this.danhSachLoc)
+    },
     tenHinhThuc(h) {
       return { qr_code: 'Quét QR', thu_cong: 'Thủ công', sua_thu_cong: 'Sửa tay' }[h] || h
     },

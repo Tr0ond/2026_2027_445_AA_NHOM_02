@@ -50,7 +50,7 @@
             <p v-if="loi.mat_khau" class="text-xs text-rose-500 mt-1">{{ loi.mat_khau }}</p>
           </div>
           <div v-if="thongBaoLoi" class="flex items-start gap-2.5 px-3.5 py-2.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-sm"><i class="fa-solid fa-circle-exclamation mt-0.5"></i><span>{{ thongBaoLoi }}</span></div>
-          <div class="text-right"><button type="button" class="text-xs text-brand-600 hover:text-brand-700 font-medium">Quên mật khẩu?</button></div>
+          <div class="text-right"><router-link :to="{ name: 'quen-mat-khau' }" class="text-xs text-brand-600 hover:text-brand-700 font-medium">Quên mật khẩu?</router-link></div>
           <button class="nut-chinh w-full !py-3 font-semibold" :disabled="dangGui"><i v-if="dangGui" class="fa-solid fa-circle-notch fa-spin"></i><i v-else class="fa-solid fa-arrow-right-to-bracket"></i>{{ dangGui ? 'Đang xử lý...' : 'Đăng nhập' }}</button>
         </form>
 

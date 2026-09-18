@@ -17,7 +17,7 @@
           <option value="giang_vien">Giảng viên</option>
           <option value="sinh_vien">Sinh viên</option>
         </select>
-      <button class="nut-phu text-sm"><i class="fa-solid fa-download"></i>Xuất dữ liệu</button>
+      <button class="nut-phu text-sm" @click="xuatDuLieu"><i class="fa-solid fa-download"></i>Xuất dữ liệu</button>
       <button class="nut-chinh text-sm" @click="moThem()"><i class="fa-solid fa-plus"></i>Thêm tài khoản</button>
     </div>
 
@@ -134,6 +134,7 @@
 
 <script>
 import api from '../../utils/axios'
+import { taiCsv } from '../../utils/export'
 
 export default {
   name: 'admin-tai-khoan',
@@ -164,6 +165,15 @@ export default {
     ] },
   },
   methods: {
+    xuatDuLieu() {
+      taiCsv('tai-khoan.csv', [
+        { label: 'Họ và tên', value: (x) => x.ho_ten },
+        { label: 'Mã số', value: (x) => x.ma_dinh_danh || '' },
+        { label: 'Email', value: (x) => x.email },
+        { label: 'Vai trò', value: (x) => this.tenVaiTro(x.vai_tro) },
+        { label: 'Trạng thái', value: (x) => x.trang_thai === 'hoat_dong' ? 'Hoạt động' : 'Bị khóa' },
+      ], this.danhSach)
+    },
     formTrong() {
       return {
         id: null, ho_ten: '', email: '', mat_khau: '', vai_tro: 'sinh_vien',

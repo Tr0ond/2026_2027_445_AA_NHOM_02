@@ -53,6 +53,17 @@ class User extends Authenticatable
         ];
     }
 
+    /** The legacy schema stores the password in mat_khau instead of password. */
+    public function getAuthPasswordName(): string
+    {
+        return 'mat_khau';
+    }
+
+    public function getAuthPassword(): string
+    {
+        return (string) $this->mat_khau;
+    }
+
     public function sinhVien()
     {
         return $this->hasOne(SinhVien::class, 'ma_tai_khoan');
