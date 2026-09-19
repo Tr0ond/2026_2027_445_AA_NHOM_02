@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Events\CapQuyenPhong;
 use App\Events\NguoiChiaSeManHinh;
 use App\Events\PhienDiemDanhDong;
+use App\Events\PhongHocDaMo;
 use App\Events\PhongHocKetThuc;
 use App\Events\SinhVienGioTay;
 use App\Events\ThanhVienPhongCapNhat;
@@ -64,6 +65,7 @@ class PhongHocController extends Controller
         });
 
         broadcast(new ThanhVienPhongCapNhat($phong->ma_phong, $request->user()->id, 'tham_gia'));
+        $this->thongBaoPhongDaMoChoSinhVien($phong);
 
         return response()->json([
             'message' => $moiTao ? 'Đã mở phòng học trực tuyến.' : 'Buổi học này đã có phòng đang diễn ra.',
@@ -449,5 +451,26 @@ class PhongHocController extends Controller
             'ngay_hoc' => $phong->lichHoc?->ngay_hoc?->format('d/m/Y'),
             'gio_bat_dau' => $phong->lichHoc?->gio_bat_dau?->format('H:i'),
         ];
+    }
+
+    private function thongBaoPhongDaMoChoSinhVien(PhongHocTrucTuyen $phong): void
+    {
+        $phong->loadMissing('lichHoc.lopHoc.dangKy.sinhVien');
+        $duLieuPhong = [
+            'ma_phong' => $phong->ma_phong,
+            'trang_thai' => $phong->trang_thai,
+            'duong_dan' => $phong->duong_dan_tham_gia,
+        ];
+
+        $phong->lichHoc?->lopHoc?->dangKy
+            ?->where('trang_thai', 'da_duyet')
+            ->pluck('sinhVien.ma_tai_khoan')
+            ->filter()
+            ->unique()
+            ->each(fn ($maTaiKhoan) => broadcast(new PhongHocDaMo(
+                (int) $maTaiKhoan,
+                (int) $phong->ma_lich_hoc,
+                $duLieuPhong,
+            )));
     }
 }

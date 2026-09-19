@@ -13,8 +13,23 @@
       <div v-for="gv in giangVienHienThi" :key="gv.id" class="bg-white rounded-[14px] border p-5 shadow-[0_1px_3px_0_rgb(0,0,0,0.06)]" :class="gv.quaTai ? 'border-amber-300' : 'border-slate-200'">
         <div class="flex items-start gap-3 mb-4"><div class="w-11 h-11 rounded-2xl flex items-center justify-center text-white font-bold text-sm shrink-0" :class="gv.quaTai ? 'bg-amber-500' : 'bg-teal-500'">{{ chuCai(gv.ho_ten) }}</div><div class="flex-1 min-w-0"><h3 class="font-bold text-slate-900 text-sm truncate">{{ gv.ho_ten }}</h3><p class="text-xs text-slate-500">Giảng viên</p><p class="text-xs text-slate-400 font-mono">{{ gv.ma_giang_vien }}</p></div><span v-if="gv.quaTai" class="nhan bg-amber-50 text-amber-700 border border-amber-200">Quá tải</span></div>
         <div class="mb-4"><div class="flex justify-between text-xs text-slate-500 mb-1.5"><span>Tải giảng dạy</span><span class="font-bold" :class="gv.quaTai ? 'text-amber-600' : 'text-teal-600'">{{ gv.lops.length }}/{{ gioiHanLop }} lớp</span></div><div class="h-2 bg-slate-100 rounded-full overflow-hidden"><div class="h-full rounded-full" :class="gv.quaTai ? 'bg-amber-500' : gv.lops.length >= 3 ? 'bg-teal-500' : 'bg-emerald-500'" :style="{ width: Math.min(gv.lops.length / gioiHanLop * 100, 100) + '%' }"></div></div></div>
-        <div class="space-y-1.5 mb-4 min-h-[42px]"><div v-for="lop in gv.lops.slice(0, 3)" :key="lop.id" class="flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs" :class="lop.trang_thai === 'dang_hoc' ? 'bg-teal-50 border border-teal-100' : 'bg-blue-50 border border-blue-100'"><span class="w-1.5 h-1.5 rounded-full shrink-0" :class="lop.trang_thai === 'dang_hoc' ? 'bg-teal-500' : 'bg-blue-500'"></span><span class="font-semibold text-slate-700">{{ lop.ma_lop_hoc }}</span><span class="text-slate-500 truncate">{{ lop.mon_hoc }}</span><span class="ml-auto shrink-0 font-medium text-teal-600">{{ lop.so_sinh_vien }}SV</span></div><p v-if="!gv.lops.length" class="text-xs text-slate-400 text-center py-2">Chưa phân công lớp nào</p></div>
-        <div class="flex gap-2"><button class="flex-1 py-2 text-xs font-medium bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200"><i class="fa-solid fa-eye mr-1"></i>Xem tất cả</button><button v-if="!gv.quaTai" class="flex-1 py-2 text-xs font-medium bg-brand-600 text-white rounded-xl hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed" :disabled="!lopChuaPhanCong.length" @click="moPhanCongCho(gv)"><i class="fa-solid fa-plus mr-1"></i>Phân công</button></div>
+        <div class="space-y-1.5 mb-4 min-h-[42px]">
+          <div v-for="lop in lopHienThiCuaGv(gv)" :key="lop.id" class="flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs" :class="lop.trang_thai === 'dang_hoc' ? 'bg-teal-50 border border-teal-100' : 'bg-blue-50 border border-blue-100'">
+            <span class="w-1.5 h-1.5 rounded-full shrink-0" :class="lop.trang_thai === 'dang_hoc' ? 'bg-teal-500' : 'bg-blue-500'"></span>
+            <span class="font-semibold text-slate-700 shrink-0">{{ lop.ma_lop_hoc }}</span>
+            <span class="text-slate-500 truncate min-w-0">{{ lop.mon_hoc }}</span>
+            <span class="ml-auto shrink-0 font-medium text-teal-600">{{ lop.so_sinh_vien }}SV</span>
+            <button type="button" class="h-8 px-2 shrink-0 rounded-lg border border-rose-200 bg-white text-rose-600 font-semibold hover:bg-rose-50 disabled:opacity-50 disabled:cursor-wait transition-colors" :disabled="dangHuyPhanCong === `${gv.id}-${lop.id}`" :aria-label="`Hủy phân công ${gv.ho_ten} khỏi lớp ${lop.ma_lop_hoc}`" @click="huyPhanCong(lop, gv)">
+              <i :class="dangHuyPhanCong === `${gv.id}-${lop.id}` ? 'fa-solid fa-circle-notch fa-spin' : 'fa-solid fa-link-slash'" aria-hidden="true"></i>
+              <span class="ml-1">{{ dangHuyPhanCong === `${gv.id}-${lop.id}` ? 'Đang hủy' : 'Hủy' }}</span>
+            </button>
+          </div>
+          <p v-if="!gv.lops.length" class="text-xs text-slate-400 text-center py-2">Chưa phân công lớp nào</p>
+        </div>
+        <div class="flex gap-2">
+          <button v-if="gv.lops.length > 3" type="button" class="flex-1 py-2 text-xs font-medium bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200" @click="doiMoRongGiangVien(gv.id)"><i :class="giangVienDangMoRong(gv.id) ? 'fa-solid fa-chevron-up' : 'fa-solid fa-eye'" class="mr-1" aria-hidden="true"></i>{{ giangVienDangMoRong(gv.id) ? 'Thu gọn' : 'Xem tất cả' }}</button>
+          <button v-if="!gv.quaTai" class="flex-1 py-2 text-xs font-medium bg-brand-600 text-white rounded-xl hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed" :disabled="!lopChuaPhanCong.length" @click="moPhanCongCho(gv)"><i class="fa-solid fa-plus mr-1"></i>Phân công</button>
+        </div>
       </div>
       <div v-if="!giangVienHienThi.length" class="sm:col-span-2 lg:col-span-3 the p-12 text-center text-slate-400"><i class="fa-solid fa-chalkboard-user text-3xl text-slate-200 block mb-2"></i>Không tìm thấy giảng viên.</div>
     </div>
@@ -22,13 +37,13 @@
     <div v-if="moModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="dongModal"></div>
       <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between"><h2 class="font-bold text-slate-900">Phân công lớp học phần</h2><button class="w-8 h-8 rounded-lg text-slate-400 hover:bg-slate-100" @click="dongModal"><i class="fa-solid fa-xmark"></i></button></div>
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between"><h2 class="font-bold text-slate-900">Phân công lớp học phần</h2><button class="w-8 h-8 rounded-lg text-slate-400 hover:bg-slate-100" aria-label="Đóng cửa sổ phân công" @click="dongModal"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>
         <form class="p-5 space-y-4" @submit.prevent="phanCong">
           <div><label class="block text-sm font-medium text-slate-700 mb-1.5">Giảng viên</label><select v-model="form.ma_giang_vien" class="o-nhap" required><option value="" disabled>Chọn giảng viên</option><option v-for="g in giangViens" :key="g.id" :value="g.id">{{ g.ho_ten }} – {{ soLopCuaGv(g.id) }}/{{ gioiHanLop }} lớp</option></select></div>
           <div><label class="block text-sm font-medium text-slate-700 mb-1.5">Lớp học phần</label><select v-model="form.ma_lop_hoc" class="o-nhap" :disabled="!lopChuaPhanCong.length" required><option value="" disabled>{{ lopChuaPhanCong.length ? 'Chọn lớp chưa có giảng viên' : 'Tất cả lớp đã có giảng viên' }}</option><option v-for="l in lopChuaPhanCong" :key="l.id" :value="l.id">{{ l.ma_lop_hoc }} – {{ l.mon_hoc }}</option></select></div>
-          <div class="bg-teal-50 border border-teal-200 rounded-xl px-4 py-3 text-xs text-teal-800 flex items-start gap-2"><i class="fa-solid fa-circle-info text-teal-500 mt-0.5"></i><span>Mỗi lớp học phần chỉ được phân công cho một giảng viên. Danh sách trên chỉ hiển thị các lớp chưa có người phụ trách.</span></div>
-          <div v-if="loiForm" class="rounded-xl bg-rose-50 border border-rose-200 text-rose-600 px-4 py-2 text-sm">{{ loiForm }}</div>
-          <div class="flex gap-3 pt-2"><button type="button" class="flex-1 py-2.5 text-sm bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200" @click="dongModal">Hủy</button><button class="flex-1 py-2.5 text-sm bg-brand-600 text-white rounded-xl hover:bg-brand-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed" :disabled="!lopChuaPhanCong.length">Xác nhận phân công</button></div>
+          <div class="bg-teal-50 border border-teal-200 rounded-xl px-4 py-3 text-xs text-teal-800 flex items-start gap-2"><i class="fa-solid fa-circle-info text-teal-500 mt-0.5" aria-hidden="true"></i><span>Mỗi lớp chỉ có một giảng viên phụ trách. Hệ thống sẽ từ chối nếu lớp mới bị trùng ngày và giờ với lịch dạy hiện có của giảng viên.</span></div>
+          <div v-if="loiForm" role="alert" class="rounded-xl bg-rose-50 border border-rose-200 text-rose-600 px-4 py-2 text-sm">{{ loiForm }}</div>
+          <div class="flex gap-3 pt-2"><button type="button" class="flex-1 py-2.5 text-sm bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200" :disabled="dangPhanCong" @click="dongModal">Hủy</button><button class="flex-1 py-2.5 text-sm bg-brand-600 text-white rounded-xl hover:bg-brand-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed" :disabled="!lopChuaPhanCong.length || dangPhanCong"><i v-if="dangPhanCong" class="fa-solid fa-circle-notch fa-spin mr-1.5" aria-hidden="true"></i>{{ dangPhanCong ? 'Đang phân công' : 'Xác nhận phân công' }}</button></div>
         </form>
       </div>
     </div>
@@ -41,7 +56,7 @@ import { taiCsv } from '../../utils/export'
 
 export default {
   name: 'admin-phan-cong',
-  data() { return { danhSach: [], giangViens: [], form: { ma_lop_hoc: '', ma_giang_vien: '' }, moModal: false, loiForm: '', tuKhoa: '', gioiHanLop: 4 } },
+  data() { return { danhSach: [], giangViens: [], form: { ma_lop_hoc: '', ma_giang_vien: '' }, moModal: false, loiForm: '', tuKhoa: '', gioiHanLop: 4, dangPhanCong: false, dangHuyPhanCong: '', giangVienMoRong: [] } },
   computed: {
     lopChuaPhanCong() { return this.danhSach.filter((lop) => !lop.giang_vien?.length) },
     giangVienDayDu() { return this.giangViens.map((gv) => { const lops = this.danhSach.filter((l) => l.giang_vien.some((g) => g.id === gv.id)); return { ...gv, lops, quaTai: lops.length >= this.gioiHanLop } }) },
@@ -64,8 +79,23 @@ export default {
       ], this.giangVienHienThi)
     },
     async tai() { const [resLop, resGv] = await Promise.all([api.get('/admin/phan-cong'), api.get('/admin/phan-cong/giang-vien')]); this.danhSach = resLop.data.danh_sach || []; this.giangViens = resGv.data.danh_sach || [] },
-    async phanCong() { this.loiForm = ''; try { await api.post('/admin/phan-cong', this.form); this.dongModal(); await this.tai() } catch (e) { this.loiForm = e.response?.data?.errors?.ma_lop_hoc?.[0] || e.response?.data?.message || 'Phân công thất bại.' } },
-    async huyPhanCong(lop, gv) { if (!confirm(`Hủy phân công "${gv.ho_ten}" khỏi lớp ${lop.ma_lop_hoc}?`)) return; try { await api.delete('/admin/phan-cong', { params: { ma_giang_vien: gv.id, ma_lop_hoc: lop.id } }); await this.tai() } catch (e) { alert(e.response?.data?.message || 'Hủy thất bại.') } },
+    async phanCong() { this.loiForm = ''; this.dangPhanCong = true; try { await api.post('/admin/phan-cong', this.form); this.dongModal(); await this.tai() } catch (e) { this.loiForm = e.response?.data?.errors?.ma_lop_hoc?.[0] || e.response?.data?.message || 'Phân công thất bại.' } finally { this.dangPhanCong = false } },
+    async huyPhanCong(lop, gv) {
+      if (!confirm(`Hủy phân công "${gv.ho_ten}" khỏi lớp ${lop.ma_lop_hoc}?`)) return
+      this.dangHuyPhanCong = `${gv.id}-${lop.id}`
+      try {
+        const { data } = await api.delete('/admin/phan-cong', { params: { ma_giang_vien: gv.id, ma_lop_hoc: lop.id } })
+        await this.tai()
+        alert(data.message)
+      } catch (e) {
+        alert(e.response?.data?.message || 'Hủy thất bại.')
+      } finally {
+        this.dangHuyPhanCong = ''
+      }
+    },
+    giangVienDangMoRong(id) { return this.giangVienMoRong.includes(id) },
+    lopHienThiCuaGv(gv) { return this.giangVienDangMoRong(gv.id) ? gv.lops : gv.lops.slice(0, 3) },
+    doiMoRongGiangVien(id) { this.giangVienMoRong = this.giangVienDangMoRong(id) ? this.giangVienMoRong.filter((ma) => ma !== id) : [...this.giangVienMoRong, id] },
     moModalPhanCong() { if (!this.lopChuaPhanCong.length) return; this.loiForm = ''; this.moModal = true },
     moPhanCongCho(gv) { if (!this.lopChuaPhanCong.length) return; this.form.ma_giang_vien = gv.id; this.moModalPhanCong() },
     dongModal() { this.form = { ma_lop_hoc: '', ma_giang_vien: '' }; this.loiForm = ''; this.moModal = false },

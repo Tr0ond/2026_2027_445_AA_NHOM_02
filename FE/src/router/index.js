@@ -86,6 +86,12 @@ const routes = [
     meta: { layout: 'admin', vai_tro: 'giang_vien' },
   },
   {
+    path: '/giang-vien/lich-day',
+    name: 'gv-lich-day',
+    component: () => import('../views/giang-vien/lich-day-tuan.vue'),
+    meta: { layout: 'admin', vai_tro: 'giang_vien' },
+  },
+  {
     path: '/giang-vien/xin-phep',
     name: 'gv-xin-phep',
     component: () => import('../views/giang-vien/xin-phep.vue'),

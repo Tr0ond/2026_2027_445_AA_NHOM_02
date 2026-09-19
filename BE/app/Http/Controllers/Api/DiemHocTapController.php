@@ -49,6 +49,8 @@ class DiemHocTapController extends Controller
                 'ten_lop' => $lop->ten_lop,
                 'mon_hoc' => $lop->monHoc?->ten_mon,
                 'so_tin_chi' => $lop->monHoc?->so_tin_chi,
+                'hoc_ky' => $lop->hoc_ky,
+                'nam_hoc' => $lop->nam_hoc,
                 'trang_thai' => $lop->trang_thai,
                 'diem_thanh_phan' => $diemCacThanhPhan,
                 'diem_tong_ket' => $ketQuaLuu->diem_tong_ket,

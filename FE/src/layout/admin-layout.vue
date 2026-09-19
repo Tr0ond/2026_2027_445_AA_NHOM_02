@@ -80,7 +80,8 @@ export default {
         { ten: 'Báo cáo & Thống kê', route: 'admin-bao-cao', icon: 'fa-solid fa-chart-pie' },
       ],
       menuGV: [
-        { ten: 'Lịch giảng dạy', route: 'giang-vien-trang-chu', icon: 'fa-solid fa-calendar-week' },
+        { ten: 'Tổng quan', route: 'giang-vien-trang-chu', icon: 'fa-solid fa-house' },
+        { ten: 'Lịch dạy', route: 'gv-lich-day', icon: 'fa-solid fa-calendar-week' },
         { ten: 'Quản lý điểm danh', route: 'gv-quan-ly-diem-danh', icon: 'fa-solid fa-clipboard-user' },
         { ten: 'Nhập điểm', route: 'gv-quan-ly-diem', icon: 'fa-solid fa-pen-to-square' },
         { ten: 'Duyệt xin phép vắng', route: 'gv-xin-phep', icon: 'fa-regular fa-envelope' },

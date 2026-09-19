@@ -2,12 +2,42 @@
   <div>
     <div class="tieu-de-trang"><div><div class="flex items-center gap-1.5 text-xs text-slate-400 mb-1"><router-link :to="{ name: 'sinh-vien-trang-chu' }" class="text-brand-600">Tổng quan</router-link><i class="fa-solid fa-chevron-right text-[9px]"></i><span>Điểm số</span></div><h4>Bảng điểm</h4></div></div>
 
+    <section class="the p-4 mb-5" aria-labelledby="tieu-de-bo-loc-hoc-ky">
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div class="flex items-center gap-3">
+          <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+            <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
+          </span>
+          <div>
+            <h2 id="tieu-de-bo-loc-hoc-ky" class="text-sm font-bold text-slate-800">Chọn kỳ xem điểm</h2>
+            <p class="mt-0.5 text-xs text-slate-500">Thống kê và bảng điểm sẽ cập nhật theo năm học, học kỳ đã chọn.</p>
+          </div>
+        </div>
+        <div class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:w-auto lg:min-w-[460px]">
+          <div>
+            <label for="loc-nam-hoc" class="mb-1.5 block text-xs font-semibold text-slate-600">Năm học</label>
+            <select id="loc-nam-hoc" v-model="locNamHoc" class="o-nhap min-h-11 !py-2" @change="doiNamHoc">
+              <option value="">Tất cả năm học</option>
+              <option v-for="namHoc in cacNamHoc" :key="namHoc" :value="namHoc">{{ namHoc }}</option>
+            </select>
+          </div>
+          <div>
+            <label for="loc-hoc-ky" class="mb-1.5 block text-xs font-semibold text-slate-600">Học kỳ</label>
+            <select id="loc-hoc-ky" v-model="locHocKy" class="o-nhap min-h-11 !py-2" :disabled="!cacHocKy.length">
+              <option value="">Tất cả học kỳ</option>
+              <option v-for="hocKy in cacHocKy" :key="hocKy" :value="hocKy">{{ nhanHocKy(hocKy) }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
       <div v-for="th in thongKe" :key="th.nhan" class="the p-5 flex items-start gap-3"><div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" :class="th.nen"><i :class="th.icon"></i></div><div><p class="text-xs text-slate-500 font-medium uppercase tracking-wide">{{ th.nhan }}</p><p class="text-2xl font-bold text-slate-900 leading-tight mt-0.5">{{ th.giaTri }}</p><p class="text-xs text-slate-500 mt-0.5">{{ th.phu }}</p></div></div>
     </div>
 
     <div class="the p-5 mb-5">
-      <div class="flex items-center justify-between mb-3"><h3 class="text-sm font-semibold text-slate-800">Tiến độ hoàn thành môn học</h3><span class="text-sm font-bold text-brand-600">{{ soMonDat }}/{{ danhSach.length }} môn</span></div>
+      <div class="flex items-center justify-between mb-3"><h3 class="text-sm font-semibold text-slate-800">Tiến độ hoàn thành môn học</h3><span class="text-sm font-bold text-brand-600">{{ soMonDat }}/{{ danhSachTheoHocKy.length }} môn</span></div>
       <div class="h-3 bg-slate-100 rounded-full overflow-hidden mb-2"><div class="h-full bg-gradient-to-r from-brand-500 to-violet-500 rounded-full" :style="{ width: tyLeHoanThanh + '%' }"></div></div>
       <div class="flex justify-between text-xs text-slate-500"><span>Đang học</span><span class="text-brand-600 font-medium">{{ tyLeHoanThanh }}% có kết quả đạt</span><span>Hoàn thành</span></div>
     </div>
@@ -15,7 +45,8 @@
     <div class="flex flex-wrap items-center gap-3 mb-5">
       <div class="relative flex-1 min-w-[190px] max-w-xs"><i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i><input v-model="tuKhoa" class="o-nhap !pl-8 !py-2" placeholder="Tìm môn học..."></div>
       <select v-model="locTrangThai" class="o-nhap !w-auto !py-2"><option value="">Tất cả trạng thái</option><option value="dat">Đã đạt</option><option value="chua_dat">Chưa đạt</option><option value="chua_co">Chưa có điểm</option></select>
-      <button class="nut-phu ml-auto" @click="xuatBangDiem"><i class="fa-solid fa-download text-xs"></i>Xuất bảng điểm</button>
+      <span class="text-xs font-medium text-slate-500">{{ danhSachLoc.length }} môn phù hợp</span>
+      <button class="nut-phu ml-auto disabled:cursor-not-allowed disabled:opacity-50" :disabled="!danhSachLoc.length" @click="xuatBangDiem"><i class="fa-solid fa-download text-xs"></i>Xuất bảng điểm</button>
     </div>
 
     <div class="the overflow-hidden">
@@ -25,13 +56,13 @@
           <tbody>
             <tr v-for="l in danhSachLoc" :key="l.id">
               <td><div class="flex items-center gap-2.5"><div class="w-8 h-8 rounded-lg bg-brand-100 text-brand-600 flex items-center justify-center shrink-0"><i class="fa-solid fa-book text-xs"></i></div><span class="font-semibold text-slate-800">{{ l.mon_hoc }}</span></div></td>
-              <td class="whitespace-nowrap text-slate-600">{{ l.ten_lop }}</td>
+              <td class="whitespace-nowrap text-slate-600"><div>{{ l.ten_lop }}</div><div class="mt-0.5 text-xs text-slate-400">{{ nhanHocKy(l.hoc_ky) }} · {{ l.nam_hoc }}</div></td>
               <td><div v-if="l.diem_thanh_phan?.length" class="flex flex-wrap gap-1.5"><span v-for="d in l.diem_thanh_phan" :key="d.ten_thanh_phan" class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-50 border border-slate-200 text-xs"><span class="text-slate-500">{{ d.ten_thanh_phan }}</span><strong :class="mauDiem(d.diem)">{{ d.diem ?? '—' }}</strong></span></div><span v-else class="text-slate-300">—</span></td>
               <td class="!text-center"><span class="text-base font-bold" :class="mauDiem(l.diem_tong_ket)">{{ l.diem_tong_ket ?? '—' }}</span></td>
               <td class="!text-center"><span class="inline-block px-2 py-0.5 text-xs font-bold rounded-lg border" :class="mauXepLoai(l)">{{ l.xep_loai || '—' }}</span></td>
               <td><span class="nhan border !py-0.5" :class="l.diem_tong_ket == null ? 'bg-slate-50 text-slate-500 border-slate-200' : l.trang_thai_ket_qua === 'dat' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'"><span class="w-1.5 h-1.5 rounded-full" :class="l.diem_tong_ket == null ? 'bg-slate-400' : l.trang_thai_ket_qua === 'dat' ? 'bg-emerald-500' : 'bg-rose-500'"></span>{{ l.diem_tong_ket == null ? 'Đang học' : l.trang_thai_ket_qua === 'dat' ? 'Hoàn thành' : 'Chưa đạt' }}</span></td>
             </tr>
-            <tr v-if="!danhSachLoc.length"><td colspan="6" class="!py-14 text-center"><i class="fa-solid fa-chart-bar text-slate-200 text-3xl"></i><p class="text-sm text-slate-400 mt-2">Chưa có dữ liệu điểm phù hợp.</p></td></tr>
+            <tr v-if="!danhSachLoc.length"><td colspan="6" class="!py-14 text-center"><i class="fa-solid fa-chart-bar text-slate-200 text-3xl"></i><p class="text-sm text-slate-400 mt-2">Không có dữ liệu điểm trong kỳ đã chọn.</p></td></tr>
           </tbody>
         </table>
       </div>
@@ -45,30 +76,50 @@ import { taiCsv } from '../../utils/export'
 
 export default {
   name: 'diem-cua-toi',
-  data() { return { danhSach: [], tuKhoa: '', locTrangThai: '' } },
+  data() { return { danhSach: [], tuKhoa: '', locTrangThai: '', locNamHoc: '', locHocKy: '' } },
   computed: {
-    soMonDat() { return this.danhSach.filter((l) => l.trang_thai_ket_qua === 'dat').length },
-    soMonCoDiem() { return this.danhSach.filter((l) => l.diem_tong_ket !== null && l.diem_tong_ket !== undefined).length },
-    diemTrungBinh() { const ds = this.danhSach.map((l) => Number(l.diem_tong_ket)).filter(Number.isFinite); return ds.length ? (ds.reduce((a, b) => a + b, 0) / ds.length).toFixed(2) : '—' },
-    tyLeHoanThanh() { return this.danhSach.length ? Math.round(this.soMonDat / this.danhSach.length * 100) : 0 },
+    cacNamHoc() { return [...new Set(this.danhSach.map((l) => l.nam_hoc).filter(Boolean))].sort((a, b) => String(b).localeCompare(String(a), 'vi', { numeric: true })) },
+    cacHocKy() {
+      return [...new Set(this.danhSach
+        .filter((l) => !this.locNamHoc || l.nam_hoc === this.locNamHoc)
+        .map((l) => l.hoc_ky)
+        .filter(Boolean))]
+        .sort((a, b) => String(a).localeCompare(String(b), 'vi', { numeric: true }))
+    },
+    danhSachTheoHocKy() { return this.danhSach.filter((l) => (!this.locNamHoc || l.nam_hoc === this.locNamHoc) && (!this.locHocKy || l.hoc_ky === this.locHocKy)) },
+    soMonDat() { return this.danhSachTheoHocKy.filter((l) => l.trang_thai_ket_qua === 'dat').length },
+    soMonCoDiem() { return this.danhSachTheoHocKy.filter((l) => l.diem_tong_ket !== null && l.diem_tong_ket !== undefined).length },
+    diemTrungBinh() { const ds = this.danhSachTheoHocKy.filter((l) => l.diem_tong_ket !== null && l.diem_tong_ket !== undefined).map((l) => Number(l.diem_tong_ket)).filter(Number.isFinite); return ds.length ? (ds.reduce((a, b) => a + b, 0) / ds.length).toFixed(2) : '—' },
+    tyLeHoanThanh() { return this.danhSachTheoHocKy.length ? Math.round(this.soMonDat / this.danhSachTheoHocKy.length * 100) : 0 },
     thongKe() { return [
       { icon: 'fa-solid fa-star', nen: 'bg-amber-50 text-amber-600', nhan: 'Điểm trung bình', giaTri: this.diemTrungBinh, phu: 'Các môn đã có điểm' },
-      { icon: 'fa-solid fa-circle-check', nen: 'bg-emerald-50 text-emerald-600', nhan: 'Môn hoàn thành', giaTri: `${this.soMonDat}/${this.danhSach.length}`, phu: 'Kết quả đạt' },
-      { icon: 'fa-solid fa-book-open', nen: 'bg-brand-50 text-brand-600', nhan: 'Môn đang học', giaTri: this.danhSach.length - this.soMonCoDiem, phu: 'Chưa có tổng kết' },
-      { icon: 'fa-solid fa-chart-bar', nen: 'bg-violet-50 text-violet-600', nhan: 'Đã có kết quả', giaTri: this.soMonCoDiem, phu: 'Trong học kỳ' },
+      { icon: 'fa-solid fa-circle-check', nen: 'bg-emerald-50 text-emerald-600', nhan: 'Môn hoàn thành', giaTri: `${this.soMonDat}/${this.danhSachTheoHocKy.length}`, phu: 'Kết quả đạt' },
+      { icon: 'fa-solid fa-book-open', nen: 'bg-brand-50 text-brand-600', nhan: 'Môn đang học', giaTri: this.danhSachTheoHocKy.length - this.soMonCoDiem, phu: 'Chưa có tổng kết' },
+      { icon: 'fa-solid fa-chart-bar', nen: 'bg-violet-50 text-violet-600', nhan: 'Đã có kết quả', giaTri: this.soMonCoDiem, phu: 'Trong kỳ đã chọn' },
     ] },
-    danhSachLoc() { const q = this.tuKhoa.trim().toLowerCase(); return this.danhSach.filter((l) => { const dungTuKhoa = !q || `${l.mon_hoc} ${l.ten_lop}`.toLowerCase().includes(q); const trangThai = l.diem_tong_ket == null ? 'chua_co' : l.trang_thai_ket_qua === 'dat' ? 'dat' : 'chua_dat'; return dungTuKhoa && (!this.locTrangThai || this.locTrangThai === trangThai) }) },
+    danhSachLoc() { const q = this.tuKhoa.trim().toLowerCase(); return this.danhSachTheoHocKy.filter((l) => { const dungTuKhoa = !q || `${l.mon_hoc} ${l.ten_lop}`.toLowerCase().includes(q); const trangThai = l.diem_tong_ket == null ? 'chua_co' : l.trang_thai_ket_qua === 'dat' ? 'dat' : 'chua_dat'; return dungTuKhoa && (!this.locTrangThai || this.locTrangThai === trangThai) }) },
   },
   async created() { const { data } = await api.get('/sinh-vien/diem'); this.danhSach = data.danh_sach || [] },
   methods: {
     xuatBangDiem() {
-      taiCsv('bang-diem-ca-nhan.csv', [
+      const hauTo = [this.locNamHoc, this.locHocKy].filter(Boolean).join('-').replace(/\s+/g, '-')
+      taiCsv(`bang-diem-ca-nhan${hauTo ? `-${hauTo}` : ''}.csv`, [
         { label: 'Môn học', value: (x) => x.mon_hoc },
         { label: 'Lớp', value: (x) => x.ten_lop },
+        { label: 'Năm học', value: (x) => x.nam_hoc },
+        { label: 'Học kỳ', value: (x) => this.nhanHocKy(x.hoc_ky) },
         { label: 'Điểm thành phần', value: (x) => (x.diem_thanh_phan || []).map((d) => d.ten_thanh_phan + ': ' + (d.diem ?? '—')).join('; ') },
         { label: 'Điểm tổng kết', value: (x) => x.diem_tong_ket ?? '' },
         { label: 'Xếp loại', value: (x) => x.xep_loai || '' },
       ], this.danhSachLoc)
+    },
+    doiNamHoc() {
+      if (this.locHocKy && !this.cacHocKy.includes(this.locHocKy)) this.locHocKy = ''
+    },
+    nhanHocKy(hocKy) {
+      if (!hocKy) return 'Chưa xác định'
+      const ketQua = String(hocKy).trim().match(/^(?:HK|HỌC KỲ\s*)?(\d+)$/i)
+      return ketQua ? `Học kỳ ${ketQua[1]}` : hocKy
     },
     mauDiem(d) { if (d === null || d === undefined) return 'text-slate-300'; return Number(d) >= 8 ? 'text-emerald-600' : Number(d) >= 5 ? 'text-blue-600' : 'text-rose-600' },
     mauXepLoai(l) { if (l.diem_tong_ket == null) return 'bg-slate-50 text-slate-400 border-slate-200'; return l.trang_thai_ket_qua === 'dat' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200' },

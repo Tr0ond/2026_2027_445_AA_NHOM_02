@@ -6,6 +6,7 @@ use App\Events\CapQuyenPhong;
 use App\Events\NguoiChiaSeManHinh;
 use App\Events\PhienDiemDanhDong;
 use App\Events\PhienDiemDanhMo;
+use App\Events\PhongHocDaMo;
 use App\Events\PhongHocKetThuc;
 use App\Events\SinhVienGioTay;
 use App\Events\ThanhVienPhongCapNhat;
@@ -76,7 +77,7 @@ class PhongHocTrucTuyenTest extends TestCase
         ]);
         Event::fake([
             CapQuyenPhong::class, NguoiChiaSeManHinh::class, PhienDiemDanhDong::class,
-            PhienDiemDanhMo::class, PhongHocKetThuc::class, SinhVienGioTay::class,
+            PhienDiemDanhMo::class, PhongHocDaMo::class, PhongHocKetThuc::class, SinhVienGioTay::class,
             ThanhVienPhongCapNhat::class, ThongBaoMoi::class, TinNhanMoi::class,
         ]);
     }
@@ -97,6 +98,10 @@ class PhongHocTrucTuyenTest extends TestCase
         $this->assertDatabaseCount('thanh_vien_phong_truc_tuyen', 1);
         $this->assertDatabaseHas('lich_hoc', ['id' => $this->lich->id, 'trang_thai' => 'dang_dien_ra']);
         Event::assertDispatched(ThanhVienPhongCapNhat::class, fn ($e) => $e->maPhong === $ma && $e->hanhDong === 'tham_gia');
+        Event::assertDispatched(PhongHocDaMo::class, fn ($e) => $e->maTaiKhoan === $this->sv->id
+            && $e->maLichHoc === $this->lich->id
+            && $e->phong['ma_phong'] === $ma
+            && $e->broadcastOn()[0]->name === 'private-nguoi-dung.'.$this->sv->id);
     }
 
     public function test_khong_mo_phong_cho_buoi_truc_tiep_da_huy_hoac_da_hoc(): void
@@ -449,6 +454,11 @@ class PhongHocTrucTuyenTest extends TestCase
     {
         $ma = $this->moPhong();
         $this->getJson('/api/lop-day/buoi-hoc')->assertOk()->assertJsonPath('danh_sach.0.phong.ma_phong', $ma);
+        $this->getJson('/api/lich-hoc')
+            ->assertOk()
+            ->assertJsonPath('danh_sach.0.ma_lop', 'ROOM-01')
+            ->assertJsonPath('danh_sach.0.da_qua_gio_hoc', false)
+            ->assertJsonPath('danh_sach.0.phong_truc_tuyen.ma_phong', $ma);
         Sanctum::actingAs($this->sv);
         $this->getJson('/api/lich-hoc')->assertOk()->assertJsonPath('danh_sach.0.phong_truc_tuyen.ma_phong', $ma);
     }

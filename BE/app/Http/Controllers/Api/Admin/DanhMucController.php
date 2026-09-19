@@ -136,11 +136,22 @@ class DanhMucController extends Controller
         return response()->json(['message' => 'Đã thêm buổi học.'], 201);
     }
 
-    public function xoaLichHoc(LichHoc $lichHoc): JsonResponse
+    public function xoaLichHoc(LopHoc $lopHoc, LichHoc $lichHoc): JsonResponse
     {
+        if ((int) $lichHoc->ma_lop_hoc !== (int) $lopHoc->id) {
+            return response()->json([
+                'message' => 'Buổi học không thuộc lớp đã chọn. Vui lòng tải lại lịch và thử lại.',
+            ], 404);
+        }
+
+        $lichHocId = $lichHoc->id;
         $lichHoc->delete();
 
-        return response()->json(['message' => 'Đã xóa buổi học.']);
+        return response()->json([
+            'message' => 'Đã xóa buổi học.',
+            'lich_hoc_id' => $lichHocId,
+            'ma_lop_hoc' => $lopHoc->id,
+        ]);
     }
 
     /**

@@ -76,7 +76,10 @@
 
           <!-- Lưới Body (Các HÀNG khung giờ - Đảm bảo ngang hàng 100%) -->
           <div class="flex flex-col divide-y divide-slate-100">
-            <div v-for="khung in khungGio" :key="khung.bat_dau" class="grid grid-cols-7 divide-x divide-slate-100">
+            <div v-if="!khungGio.length" class="py-16 text-center text-sm text-slate-400">
+              Chưa có buổi học nào trong tuần này.
+            </div>
+            <div v-for="khung in khungGio" :key="khung.bat_dau + '-' + khung.ket_thuc" class="grid grid-cols-7 divide-x divide-slate-100">
               
               <!-- 7 ô tương ứng với 7 ngày trong cùng 1 khung giờ -->
               <div v-for="ngay in cacNgayHienThi" :key="ngay.iso + '-' + khung.bat_dau" class="p-3 flex flex-col transition-colors hover:bg-slate-50/50" :class="ngay.la_hom_nay ? 'bg-brand-50/20' : 'bg-white'">
@@ -183,6 +186,7 @@
 <script>
 import api from '../../utils/axios'
 import { useAuthStore } from '../../stores/auth'
+import { taoEcho } from '../../utils/echo'
 
 const THU = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']
 const BANG_MAU = [
@@ -205,6 +209,8 @@ export default {
       loi: '',
       ngayHienTai: new Date(),
       boDemNgay: null,
+      boDongBoLich: null,
+      kenhNguoiDung: null,
       buoiChon: null,
       bangMauMon: {}, 
     }
@@ -247,13 +253,13 @@ export default {
       ]
     },
     khungGio() {
-      return [
-        { bat_dau: '07:00', ket_thuc: '09:00' },
-        { bat_dau: '09:15', ket_thuc: '11:15' },
-        { bat_dau: '13:00', ket_thuc: '15:00' },
-        { bat_dau: '15:15', ket_thuc: '17:15' },
-        { bat_dau: '17:45', ket_thuc: '21:00' },
-      ]
+      const cacKhung = new Map()
+      this.danhSach.forEach((buoi) => {
+        const batDau = String(buoi.gio_bat_dau || '').slice(0, 5)
+        const ketThuc = String(buoi.gio_ket_thuc || '').slice(0, 5)
+        if (batDau && ketThuc) cacKhung.set(`${batDau}-${ketThuc}`, { bat_dau: batDau, ket_thuc: ketThuc })
+      })
+      return [...cacKhung.values()].sort((a, b) => a.bat_dau.localeCompare(b.bat_dau))
     }
   },
   async created() {
@@ -261,12 +267,16 @@ export default {
     await this.taiLich()
   },
   mounted() {
+    this.langNghePhongHocDaMo()
     this.boDemNgay = window.setInterval(() => {
       this.ngayHienTai = new Date()
     }, 60 * 1000)
+    this.boDongBoLich = window.setInterval(() => this.taiLich(true), 30 * 1000)
   },
   beforeUnmount() {
     window.clearInterval(this.boDemNgay)
+    window.clearInterval(this.boDongBoLich)
+    this.kenhNguoiDung?.stopListening('.phong.hoc.da.mo')
   },
   methods: {
     isoDate(d) {
@@ -288,24 +298,40 @@ export default {
       this.tuanBatDau = this.themNgay(this.tuanBatDau, n * 7)
       this.taiLich()
     },
-    async taiLich() {
-      this.dangTai = true
-      this.loi = ''
+    async taiLich(imLang = false) {
+      if (!imLang) this.dangTai = true
+      if (!imLang) this.loi = ''
       try {
         const { data } = await api.get('/lich-hoc', { params: { tu_ngay: this.isoDate(this.tuanBatDau), den_ngay: this.isoDate(this.tuanKetThuc) } })
         let danhSach = data.danh_sach || []
-        if (!danhSach.length) {
+        if (!imLang && !danhSach.length) {
           const fallback = await api.get('/lich-hoc')
           danhSach = (fallback.data.danh_sach || []).filter((b) => b.ngay_hoc >= this.isoDate(this.tuanBatDau) && b.ngay_hoc <= this.isoDate(this.tuanKetThuc))
         }
         this.danhSach = danhSach
+        if (this.buoiChon) this.buoiChon = danhSach.find((b) => b.id === this.buoiChon.id) || this.buoiChon
         this.phanMauMon()
       } catch (e) {
-        this.danhSach = []
-        this.loi = e.response?.data?.message || 'Không thể tải lịch học. Vui lòng thử lại.'
+        if (!imLang) {
+          this.danhSach = []
+          this.loi = e.response?.data?.message || 'Không thể tải lịch học. Vui lòng thử lại.'
+        }
       } finally {
-        this.dangTai = false
+        if (!imLang) this.dangTai = false
       }
+    },
+    langNghePhongHocDaMo() {
+      if (!this.auth.user?.id || !this.auth.token) return
+      this.kenhNguoiDung = taoEcho(this.auth.token)
+        .private(`nguoi-dung.${this.auth.user.id}`)
+        .listen('.phong.hoc.da.mo', (event) => this.capNhatPhongHocDaMo(event))
+    },
+    capNhatPhongHocDaMo(event) {
+      const index = this.danhSach.findIndex((buoi) => Number(buoi.id) === Number(event.ma_lich_hoc))
+      if (index < 0 || !event.phong) return
+      const buoiDaCapNhat = { ...this.danhSach[index], trang_thai: 'dang_dien_ra', phong_truc_tuyen: event.phong }
+      this.danhSach.splice(index, 1, buoiDaCapNhat)
+      if (Number(this.buoiChon?.id) === Number(event.ma_lich_hoc)) this.buoiChon = buoiDaCapNhat
     },
     phanMauMon() {
       const cacMon = [...new Set(this.danhSach.map((b) => b.ma_mon_hoc).filter(Boolean))]
@@ -323,16 +349,8 @@ export default {
         : { bg: 'bg-white', border: 'border-slate-300', text: 'text-slate-800' }
     },
     buoiTrongKhung(ngay, khung) {
-      const toPhut = (gio) => {
-        const [h, m] = String(gio).split(':').map(Number)
-        return h * 60 + m
-      }
-      const batDauKhung = toPhut(khung.bat_dau)
-      const ketThucKhung = toPhut(khung.ket_thuc)
-      return ngay.buois.filter((b) => {
-        const batDau = toPhut(b.gio_bat_dau)
-        return batDau >= batDauKhung && batDau < ketThucKhung
-      })
+      return ngay.buois.filter((b) => String(b.gio_bat_dau).slice(0, 5) === khung.bat_dau
+        && String(b.gio_ket_thuc).slice(0, 5) === khung.ket_thuc)
     },
     chonBuoi(b) {
       this.buoiChon = b

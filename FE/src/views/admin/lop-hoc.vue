@@ -102,15 +102,18 @@
 
     <!-- Modal chi tiết lớp: lịch học + sinh viên -->
     <div v-if="moChiTietModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="moChiTietModal = false"></div>
+      <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" @click="dongChiTiet"></div>
       <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl p-6 max-h-[90vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-4">
-          <h5 class="font-bold text-slate-800">
-            {{ lopChiTiet.ten_lop }}
-            <span class="text-slate-400 text-sm font-normal">({{ lopChiTiet.mon_hoc?.ten_mon }})</span>
-          </h5>
-          <button class="w-9 h-9 rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200" @click="moChiTietModal = false">
-            <i class="fa-solid fa-xmark"></i>
+          <div class="min-w-0">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="nhan bg-brand-50 text-brand-700 font-mono">{{ lopChiTiet.ma_lop_hoc }}</span>
+              <h5 class="font-bold text-slate-800">{{ lopChiTiet.ten_lop }}</h5>
+            </div>
+            <p class="mt-1 text-sm text-slate-500">{{ lopChiTiet.mon_hoc?.ten_mon }}</p>
+          </div>
+          <button type="button" class="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 disabled:opacity-50" aria-label="Đóng chi tiết lớp" @click="dongChiTiet">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
           </button>
         </div>
 
@@ -195,6 +198,11 @@
             </label>
             <button class="nut-chinh !py-1.5 text-xs"><i class="fa-solid fa-plus"></i></button>
           </form>
+          <div v-if="thongBaoLichHoc" class="mb-3 rounded-xl border px-3.5 py-2 text-sm"
+            :class="loiLichHoc ? 'border-rose-200 bg-rose-50 text-rose-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'"
+            :role="loiLichHoc ? 'alert' : 'status'" aria-live="polite">
+            {{ thongBaoLichHoc }}
+          </div>
           <div class="overflow-x-auto rounded-xl border border-slate-200">
             <table class="bang">
               <thead><tr><th>Ngày</th><th>Giờ</th><th>Phòng</th><th>Hình thức</th><th></th></tr></thead>
@@ -205,10 +213,18 @@
                   <td>{{ lh.phong_hoc || '—' }}</td>
                   <td><span class="nhan" :class="lh.co_hoc_truc_tuyen ? 'bg-sky-100 text-sky-700' : 'bg-slate-100 text-slate-600'">{{ lh.co_hoc_truc_tuyen ? 'Trực tuyến' : 'Trực tiếp' }}</span></td>
                   <td class="!text-right">
-                    <button class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100" @click="xoaLichHoc(lh)"><i class="fa-solid fa-xmark text-xs"></i></button>
+                    <button type="button"
+                      class="w-10 h-10 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+                      :disabled="lichDangXoa !== null"
+                      :aria-label="`Xóa buổi học ${lh.ngay_hoc} của lớp ${lopChiTiet.ma_lop_hoc}`"
+                      :title="`Xóa lịch ${lh.ngay_hoc}`"
+                      @click="xoaLichHoc(lh)">
+                      <i :class="lichDangXoa === lh.id ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-xmark'" class="text-xs" aria-hidden="true"></i>
+                    </button>
                   </td>
                 </tr>
-                <tr v-if="!lichHocLop.length"><td colspan="5" class="!py-8 text-center text-slate-400">Chưa có buổi học.</td></tr>
+                <tr v-if="dangTaiLich"><td colspan="5" class="!py-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2" aria-hidden="true"></i>Đang tải lịch học...</td></tr>
+                <tr v-else-if="!lichHocLop.length"><td colspan="5" class="!py-8 text-center text-slate-400">Chưa có buổi học.</td></tr>
               </tbody>
             </table>
           </div>
@@ -267,6 +283,11 @@ export default {
       tabChiTiet: 'lich',
       lopChiTiet: {},
       lichHocLop: [],
+      dangTaiLich: false,
+      lichDangXoa: null,
+      thongBaoLichHoc: '',
+      loiLichHoc: false,
+      phienTaiLich: 0,
       lichMoi: { ngay_hoc: '', gio_bat_dau: '', gio_ket_thuc: '', phong_hoc: '', co_hoc_truc_tuyen: true },
       svTrongLop: [],
       svNgoaiLop: [],
@@ -393,11 +414,33 @@ export default {
       }
     },
     async moChiTiet(l) {
-      this.lopChiTiet = l
+      this.lopChiTiet = { ...l }
       this.tabChiTiet = 'lich'
-      const { data } = await api.get(`/admin/lop-hoc/${l.id}/lich-hoc`)
-      this.lichHocLop = data.danh_sach.map((x) => ({ ...x, ngay_hoc: x.ngay_hoc?.slice(0, 10) }))
+      this.lichHocLop = []
+      this.thongBaoLichHoc = ''
+      this.loiLichHoc = false
       this.moChiTietModal = true
+      await this.taiLichHocLop(l.id)
+    },
+    dongChiTiet() {
+      this.phienTaiLich++
+      this.moChiTietModal = false
+    },
+    async taiLichHocLop(lopHocId = this.lopChiTiet.id) {
+      const phien = ++this.phienTaiLich
+      this.dangTaiLich = true
+      try {
+        const { data } = await api.get(`/admin/lop-hoc/${lopHocId}/lich-hoc`)
+        if (phien !== this.phienTaiLich || lopHocId !== this.lopChiTiet.id) return
+        this.lichHocLop = data.danh_sach.map((x) => ({ ...x, ngay_hoc: x.ngay_hoc?.slice(0, 10) }))
+      } catch (e) {
+        if (phien !== this.phienTaiLich || lopHocId !== this.lopChiTiet.id) return
+        this.lichHocLop = []
+        this.loiLichHoc = true
+        this.thongBaoLichHoc = e.response?.data?.message || 'Không thể tải lịch học. Vui lòng thử lại.'
+      } finally {
+        if (phien === this.phienTaiLich) this.dangTaiLich = false
+      }
     },
     async chuyenTabSv() {
       this.tabChiTiet = 'sv'
@@ -414,8 +457,26 @@ export default {
       }
     },
     async xoaLichHoc(lh) {
-      await api.delete(`/admin/lich-hoc/${lh.id}`)
-      this.lichHocLop = this.lichHocLop.filter((x) => x.id !== lh.id)
+      const lopHocId = this.lopChiTiet.id
+      const maLop = this.lopChiTiet.ma_lop_hoc
+      if (!confirm(`Xóa buổi học ngày ${lh.ngay_hoc} (${lh.gio_bat_dau}–${lh.gio_ket_thuc}) của lớp ${maLop}?`)) return
+
+      this.lichDangXoa = lh.id
+      this.thongBaoLichHoc = ''
+      this.loiLichHoc = false
+      try {
+        const { data } = await api.delete(`/admin/lop-hoc/${lopHocId}/lich-hoc/${lh.id}`)
+        if (lopHocId !== this.lopChiTiet.id) return
+        await this.taiLichHocLop(lopHocId)
+        this.thongBaoLichHoc = data.message || 'Đã xóa buổi học.'
+      } catch (e) {
+        if (lopHocId !== this.lopChiTiet.id) return
+        this.loiLichHoc = true
+        this.thongBaoLichHoc = e.response?.data?.message || 'Xóa buổi học thất bại. Vui lòng tải lại và thử lại.'
+        await this.taiLichHocLop(lopHocId)
+      } finally {
+        if (lopHocId === this.lopChiTiet.id) this.lichDangXoa = null
+      }
     },
     async taiSinhVienLop() {
       const id = this.lopChiTiet.id

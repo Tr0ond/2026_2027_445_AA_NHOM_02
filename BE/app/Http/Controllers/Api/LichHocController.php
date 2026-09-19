@@ -39,6 +39,7 @@ class LichHocController extends Controller
         $danhSach = $query->get()->map(fn (LichHoc $lich) => [
             'id' => $lich->id,
             'ma_lop_hoc' => $lich->ma_lop_hoc,
+            'ma_lop' => $lich->lopHoc?->ma_lop_hoc,
             'ten_lop' => $lich->lopHoc?->ten_lop,
             'mon_hoc' => $lich->lopHoc?->monHoc?->ten_mon,
             'ma_mon_hoc' => $lich->lopHoc?->monHoc?->id,
@@ -53,6 +54,7 @@ class LichHocController extends Controller
             'co_hoc_truc_tuyen' => $lich->co_hoc_truc_tuyen,
             'chu_de' => $lich->chu_de,
             'trang_thai' => $lich->trang_thai,
+            'da_qua_gio_hoc' => $lich->daQuaGioHoc(),
             'phong_truc_tuyen' => $lich->phongTrucTuyen ? [
                 'ma_phong' => $lich->phongTrucTuyen->ma_phong,
                 'trang_thai' => $lich->phongTrucTuyen->trang_thai,
@@ -84,4 +86,3 @@ class LichHocController extends Controller
         ]]);
     }
 }
-
