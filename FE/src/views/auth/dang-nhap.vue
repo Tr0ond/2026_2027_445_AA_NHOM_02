@@ -77,7 +77,7 @@ export default {
       email: '', matKhau: '', hienMatKhau: false, loi: {}, thongBaoLoi: '', dangGui: false,
       taiKhoanDemo: [
         { ten: 'Sinh viên', email: 'sv1@portal.test', icon: 'fa-solid fa-user-graduate', mau: 'bg-brand-50 border-brand-200 text-brand-700' },
-        { ten: 'Giảng viên', email: 'minh.gv@portal.test', icon: 'fa-solid fa-chalkboard-user', mau: 'bg-teal-50 border-teal-200 text-teal-700' },
+        { ten: 'Giảng viên', email: 'gv01@portal.test', icon: 'fa-solid fa-chalkboard-user', mau: 'bg-teal-50 border-teal-200 text-teal-700' },
         { ten: 'Quản trị', email: 'admin@portal.test', icon: 'fa-solid fa-user-shield', mau: 'bg-slate-100 border-slate-300 text-slate-700' },
       ],
     }

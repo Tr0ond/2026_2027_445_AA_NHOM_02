@@ -88,6 +88,8 @@ class DiemHocTapTest extends TestCase
         $this->getJson('/api/sinh-vien/diem')
             ->assertOk()
             ->assertJsonCount(1, 'danh_sach')
+            ->assertJsonPath('danh_sach.0.hoc_ky', '1')
+            ->assertJsonPath('danh_sach.0.nam_hoc', '2026-2027')
             ->assertJsonPath('danh_sach.0.xep_loai', 'A')
             ->assertJsonPath('danh_sach.0.trang_thai_ket_qua', 'dat');
 

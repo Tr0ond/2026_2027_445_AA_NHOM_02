@@ -145,7 +145,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/lop-hoc/{lopHoc}/lich-hoc', [DanhMucController::class, 'lichHocCuaLop']);
         Route::post('/lop-hoc/{lopHoc}/lich-hoc', [DanhMucController::class, 'luuLichHoc']);
         Route::post('/lop-hoc/{lopHoc}/lich-hoc-nhanh', [DanhMucController::class, 'taoLichNhanh']);
-        Route::delete('/lich-hoc/{lichHoc}', [DanhMucController::class, 'xoaLichHoc']);
+        Route::delete('/lop-hoc/{lopHoc}/lich-hoc/{lichHoc}', [DanhMucController::class, 'xoaLichHoc']);
 
         Route::get('/lop-hoc/{lopHoc}/thanh-phan', [ThanhPhanController::class, 'index']);
         Route::post('/lop-hoc/{lopHoc}/thanh-phan', [ThanhPhanController::class, 'store']);

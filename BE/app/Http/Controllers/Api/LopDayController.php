@@ -27,6 +27,7 @@ class LopDayController extends Controller
                 'id' => $lop->id,
                 'ma_lop_hoc' => $lop->ma_lop_hoc,
                 'ten_lop' => $lop->ten_lop,
+                'ma_mon' => $lop->monHoc?->ma_mon_hoc,
                 'mon_hoc' => $lop->monHoc?->ten_mon,
                 'hoc_ky' => $lop->hoc_ky,
                 'nam_hoc' => $lop->nam_hoc,

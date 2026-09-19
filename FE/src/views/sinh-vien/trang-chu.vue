@@ -75,14 +75,17 @@
 <script>
 import api from '../../utils/axios'
 import { useAuthStore } from '../../stores/auth'
+import { taoEcho } from '../../utils/echo'
 
 export default {
   name: 'sinh-vien-trang-chu',
   data() {
     return {
-      lops: [], buoiSapToi: [], diemSo: [], lichSuDiemDanh: [],
+      lops: [], lichHoc: [], diemSo: [], lichSuDiemDanh: [],
       thoiGianHienTai: new Date(),
       boDemGio: null,
+      boDongBoLich: null,
+      kenhNguoiDung: null,
       thongBaoMau: [
         { icon: 'fa-solid fa-triangle-exclamation', mau: 'text-amber-500 bg-amber-50', tieuDe: 'Kiểm tra lịch học tuần này', moTa: 'Lịch có thể được cập nhật bởi giảng viên' },
         { icon: 'fa-solid fa-calendar-days', mau: 'text-brand-500 bg-brand-50', tieuDe: 'Theo dõi điểm thành phần', moTa: 'Xem kết quả mới nhất trong mục Điểm số' },
@@ -97,8 +100,9 @@ export default {
   computed: {
     auth() { return useAuthStore() },
     thongTinSinhVien() { return this.auth.user?.sinh_vien || null },
+    buoiSapToi() { return this.lichHoc.filter((buoi) => this.buoiConHieuLuc(buoi)) },
     buoiKeTiep() { return this.buoiSapToi[0] || null },
-    buoiHomNay() { const ngay = new Date().toISOString().slice(0, 10); return this.buoiSapToi.filter((b) => b.ngay_hoc === ngay) },
+    buoiHomNay() { const ngay = this.ngayHomNayIso(); return this.lichHoc.filter((b) => b.ngay_hoc === ngay) },
     diemGanDay() { return this.diemSo.filter((d) => d.diem_tong_ket !== null && d.diem_tong_ket !== undefined).slice(0, 3) },
     gpa() { const ds = this.diemGanDay.map((d) => Number(d.diem_tong_ket)).filter(Number.isFinite); return ds.length ? (ds.reduce((a, b) => a + b, 0) / ds.length).toFixed(2) : '—' },
     tyLeChuyenCan() { const tong = this.lichSuDiemDanh.length; if (!tong) return '—'; const coMat = this.lichSuDiemDanh.filter((d) => ['co_mat', 'di_muon'].includes(d.trang_thai_diem_danh)).length; return `${Math.round(coMat / tong * 100)}%` },
@@ -114,19 +118,69 @@ export default {
   async created() {
     const [resLop, resLich, resDiem, resDiemDanh] = await Promise.all([api.get('/sinh-vien/lop-cua-toi'), api.get('/lich-hoc'), api.get('/sinh-vien/diem'), api.get('/sinh-vien/lich-su-diem-danh')])
     this.lops = resLop.data.danh_sach || []
-    this.buoiSapToi = (resLich.data.danh_sach || []).filter((b) => b.ngay_hoc >= new Date().toISOString().slice(0, 10)).slice(0, 5)
+    this.capNhatDanhSachLich(resLich.data.danh_sach || [])
     this.diemSo = resDiem.data.danh_sach || []
     this.lichSuDiemDanh = resDiemDanh.data.danh_sach || []
   },
   mounted() {
+    this.langNghePhongHocDaMo()
     this.boDemGio = window.setInterval(() => {
       this.thoiGianHienTai = new Date()
     }, 1000)
+    this.boDongBoLich = window.setInterval(() => this.taiLaiLich(), 30 * 1000)
   },
   beforeUnmount() {
     window.clearInterval(this.boDemGio)
+    window.clearInterval(this.boDongBoLich)
+    this.kenhNguoiDung?.stopListening('.phong.hoc.da.mo')
   },
   methods: {
+    capNhatDanhSachLich(danhSach) {
+      this.lichHoc = danhSach
+        .filter((buoi) => buoi.ngay_hoc >= this.ngayHomNayIso())
+    },
+    ngayHomNayIso() {
+      const ngay = this.thoiGianHienTai
+      return `${ngay.getFullYear()}-${String(ngay.getMonth() + 1).padStart(2, '0')}-${String(ngay.getDate()).padStart(2, '0')}`
+    },
+    buoiConHieuLuc(buoi) {
+      if (['da_hoc', 'da_huy'].includes(buoi.trang_thai)) return false
+
+      const ngayHoc = String(buoi.ngay_hoc || '')
+      const gioKetThuc = String(buoi.gio_ket_thuc || '').slice(0, 5)
+      if (!ngayHoc || !gioKetThuc) return false
+
+      const thoiDiemKetThuc = new Date(`${ngayHoc}T${gioKetThuc}:00`)
+      return Number.isFinite(thoiDiemKetThuc.getTime())
+        && thoiDiemKetThuc.getTime() > this.thoiGianHienTai.getTime()
+    },
+    async taiLaiLich() {
+      try {
+        const { data } = await api.get('/lich-hoc')
+        this.capNhatDanhSachLich(data.danh_sach || [])
+      } catch {
+        // Giữ dữ liệu hiện tại khi lần đồng bộ nền tạm thời thất bại.
+      }
+    },
+    langNghePhongHocDaMo() {
+      if (!this.auth.user?.id || !this.auth.token) return
+      this.kenhNguoiDung = taoEcho(this.auth.token)
+        .private(`nguoi-dung.${this.auth.user.id}`)
+        .listen('.phong.hoc.da.mo', (event) => this.capNhatPhongHocDaMo(event))
+    },
+    capNhatPhongHocDaMo(event) {
+      const index = this.lichHoc.findIndex((buoi) => Number(buoi.id) === Number(event.ma_lich_hoc))
+      if (!event.phong) return
+      if (index < 0) {
+        this.taiLaiLich()
+        return
+      }
+      this.lichHoc.splice(index, 1, {
+        ...this.lichHoc[index],
+        trang_thai: 'dang_dien_ra',
+        phong_truc_tuyen: event.phong,
+      })
+    },
     dinhDangNgay(n) { return new Date(n).toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit' }) },
     dinhDangThu(n) { return new Date(n).toLocaleDateString('vi-VN', { weekday: 'short' }).replace('.', '') },
     dinhDangDiem(n) { const x = Number(n); return Number.isFinite(x) ? x.toFixed(1) : '—' },
