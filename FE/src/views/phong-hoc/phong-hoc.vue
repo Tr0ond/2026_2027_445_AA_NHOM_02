@@ -115,22 +115,35 @@
             <div v-if="!laGiangVien && daXinPhepVang" class="absolute inset-0 z-20 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-6">
               <div class="max-w-sm text-center"><span class="w-20 h-20 mx-auto rounded-3xl bg-sky-500/20 border border-sky-500/30 text-sky-400 flex items-center justify-center text-3xl"><i class="fa-solid fa-file-circle-check"></i></span><h3 class="text-xl font-bold text-white mt-4">Đã xin phép vắng</h3><p class="text-sm text-slate-400 mt-2">Đơn của bạn đã được giảng viên duyệt. Bạn không cần quét mã QR điểm danh cho buổi học này.</p></div>
             </div>
+
+            <!-- Chrome/Safari mobile có thể chặn âm thanh từ xa cho tới khi người dùng chạm. -->
+            <button v-if="amThanhBiChan" type="button"
+              class="absolute left-1/2 top-16 z-30 -translate-x-1/2 min-h-12 whitespace-nowrap rounded-xl bg-amber-400 px-4 py-3 font-bold text-slate-950 shadow-xl hover:bg-amber-300"
+              @click="batLaiAmThanh">
+              <i class="fa-solid fa-volume-high mr-2"></i>Chạm để bật âm thanh lớp học
+            </button>
           </div>
 
           <!-- Thanh điều khiển media -->
           <div class="flex flex-wrap justify-center gap-2 sm:gap-3 shrink-0">
-            <button class="w-14 sm:w-16 h-14 rounded-2xl flex flex-col items-center justify-center gap-1 text-xs" :class="micBat ? 'bg-slate-700 text-white hover:bg-slate-600' : 'bg-rose-600 text-white hover:bg-rose-700'"
-              :disabled="!micTrack" @click="batTatMic"
-              :title="!micTrack ? 'Video chưa cấu hình' : (!quyenToi.mac ? 'Chưa được giáo viên cấp quyền dùng mic' : 'Bật/tắt micro')">
+            <button class="w-14 sm:w-16 h-14 rounded-2xl flex flex-col items-center justify-center gap-1 text-xs disabled:cursor-not-allowed disabled:opacity-50" :class="micBat ? 'bg-slate-700 text-white hover:bg-slate-600' : 'bg-rose-600 text-white hover:bg-rose-700'"
+              :disabled="!agoraClient" @click="batTatMic"
+              :title="!agoraClient ? 'Đang kết nối phòng video' : (!quyenToi.mac && !laGiangVien ? 'Chưa được giáo viên cấp quyền dùng mic' : (!micTrack ? 'Nhấn để cấp quyền micro' : 'Bật/tắt micro'))">
               <i :class="micBat ? 'fa-solid fa-microphone' : 'fa-solid fa-microphone-slash'"></i>
               <span class="hidden sm:block">{{ micBat ? 'Mic' : 'Tắt' }}</span>
               <i v-if="!quyenToi.mac && !laGiangVien" class="fa-solid fa-lock text-[10px] opacity-70"></i>
             </button>
 
-            <button class="w-14 sm:w-16 h-14 rounded-2xl flex flex-col items-center justify-center gap-1 text-xs" :class="camBat ? 'bg-slate-700 text-white hover:bg-slate-600' : 'bg-rose-600 text-white hover:bg-rose-700'"
-              :disabled="!camTrack" @click="batTatCam">
+            <button class="w-14 sm:w-16 h-14 rounded-2xl flex flex-col items-center justify-center gap-1 text-xs disabled:cursor-not-allowed disabled:opacity-50" :class="camBat ? 'bg-slate-700 text-white hover:bg-slate-600' : 'bg-rose-600 text-white hover:bg-rose-700'"
+              :disabled="!agoraClient" @click="batTatCam" :title="!camTrack ? 'Nhấn để cấp quyền camera' : 'Bật/tắt camera'">
               <i :class="camBat ? 'fa-solid fa-video' : 'fa-solid fa-video-slash'"></i>
               <span class="hidden sm:block">{{ camBat ? 'Camera' : 'Tắt' }}</span>
+            </button>
+
+            <button class="w-14 sm:w-16 h-14 rounded-2xl bg-slate-700 text-slate-200 hover:bg-slate-600 flex flex-col items-center justify-center gap-1 text-xs disabled:cursor-not-allowed disabled:opacity-50"
+              :disabled="!agoraClient" @click="batLaiAmThanh" title="Khởi động lại âm thanh từ các thành viên">
+              <i class="fa-solid fa-volume-high"></i>
+              <span class="hidden sm:block">Âm thanh</span>
             </button>
 
             <button class="w-14 sm:w-16 h-14 rounded-2xl flex flex-col items-center justify-center gap-1 text-xs" :class="dangChiaSe ? 'bg-brand-600 text-white hover:bg-brand-700' : 'bg-slate-700 text-slate-200 hover:bg-slate-600'"
@@ -145,10 +158,10 @@
               @click="gioTay">
               <i class="fa-solid fa-hand text-lg"></i><span class="hidden sm:block">Giơ tay</span>
             </button>
-            <button v-if="laGiangVien" class="w-14 sm:w-16 h-14 rounded-2xl flex flex-col items-center justify-center gap-1 text-xs bg-teal-600 hover:bg-teal-700 text-white" @click="tabPhong = 'diem_danh'"><i class="fa-solid fa-qrcode text-lg"></i><span class="hidden sm:block">QR</span></button>
+            <button v-if="laGiangVien" class="w-14 sm:w-16 h-14 rounded-2xl flex flex-col items-center justify-center gap-1 text-xs bg-teal-600 hover:bg-teal-700 text-white" aria-label="Mở bảng điểm danh" @click="moBangPhong('diem_danh')"><i class="fa-solid fa-qrcode text-lg" aria-hidden="true"></i><span class="hidden sm:block">QR</span></button>
             <span class="hidden sm:block w-px h-8 bg-slate-700 self-center"></span>
-            <button class="w-14 sm:w-16 h-14 rounded-2xl flex flex-col items-center justify-center gap-1 text-xs bg-slate-700 hover:bg-slate-600 text-white" @click="tabPhong = 'chat'"><i class="fa-solid fa-comment text-lg"></i><span class="hidden sm:block">Chat</span></button>
-            <button class="w-14 sm:w-16 h-14 rounded-2xl flex flex-col items-center justify-center gap-1 text-xs bg-slate-700 hover:bg-slate-600 text-white" @click="tabPhong = 'thanh_vien'"><i class="fa-solid fa-users text-lg"></i><span class="hidden sm:block">Thành viên</span></button>
+            <button class="w-14 sm:w-16 h-14 rounded-2xl flex flex-col items-center justify-center gap-1 text-xs bg-slate-700 hover:bg-slate-600 text-white" aria-label="Mở trò chuyện" @click="moBangPhong('chat')"><i class="fa-solid fa-comment text-lg" aria-hidden="true"></i><span class="hidden sm:block">Chat</span></button>
+            <button class="w-14 sm:w-16 h-14 rounded-2xl flex flex-col items-center justify-center gap-1 text-xs bg-slate-700 hover:bg-slate-600 text-white" aria-label="Xem thành viên" @click="moBangPhong('thanh_vien')"><i class="fa-solid fa-users text-lg" aria-hidden="true"></i><span class="hidden sm:block">Thành viên</span></button>
             <button class="w-14 sm:w-16 h-14 rounded-2xl flex flex-col items-center justify-center gap-1 text-xs bg-slate-700 hover:bg-slate-600 text-white" @click="toanManHinh"><i class="fa-solid fa-expand text-lg"></i><span class="hidden sm:block">Phóng to</span></button>
           </div>
 
@@ -218,8 +231,22 @@
           </div>
         </div>
 
-        <!-- Cột phải: thành viên + chat -->
-        <div class="hidden lg:flex w-72 xl:w-80 shrink-0 flex-col bg-slate-800 border-l border-slate-700/50">
+        <!-- Lớp nền cho bảng chức năng trên điện thoại -->
+        <button v-if="bangMobileMo" type="button" class="fixed inset-0 z-40 bg-slate-950/70 backdrop-blur-sm lg:hidden" aria-label="Đóng bảng chức năng" @click="dongBangPhong"></button>
+
+        <!-- Cột phải trên desktop, bottom sheet trên điện thoại -->
+        <div
+          class="fixed inset-x-0 bottom-0 z-50 max-h-[78dvh] flex-col rounded-t-2xl bg-slate-800 border-t border-slate-700 shadow-2xl lg:static lg:z-auto lg:flex lg:max-h-none lg:w-72 xl:w-80 lg:shrink-0 lg:rounded-none lg:border-t-0 lg:border-l lg:shadow-none"
+          :class="bangMobileMo ? 'flex' : 'hidden lg:flex'"
+          :style="bangMobileMo ? { paddingBottom: 'env(safe-area-inset-bottom)' } : undefined"
+          :role="bangMobileMo ? 'dialog' : 'complementary'"
+          :aria-modal="bangMobileMo ? 'true' : undefined"
+          aria-label="Bảng chức năng lớp học"
+        >
+          <div class="flex min-h-12 items-center justify-between border-b border-slate-700/50 px-4 lg:hidden">
+            <span class="text-sm font-semibold text-slate-100">Chức năng lớp học</span>
+            <button type="button" class="flex h-11 w-11 items-center justify-center rounded-xl text-slate-300 hover:bg-slate-700 hover:text-white" aria-label="Đóng bảng chức năng" @click="dongBangPhong"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+          </div>
           <div class="flex border-b border-slate-700/50 shrink-0"><button v-for="tab in cacTabPhong" :key="tab.k" class="flex-1 flex flex-col items-center gap-0.5 py-3 text-xs font-medium transition-colors" :class="tabPhong === tab.k ? 'text-indigo-400 border-b-2 border-indigo-400' : 'text-slate-400 hover:text-slate-200'" @click="tabPhong = tab.k"><i :class="tab.icon"></i>{{ tab.ten }}</button></div>
           <div v-if="tabPhong === 'thanh_vien'" class="overflow-hidden flex-1">
             <div class="px-4 py-3 border-b border-slate-800 flex items-center justify-between text-sm font-semibold">
@@ -301,9 +328,9 @@
               </div>
               <form @submit.prevent="guiTinNhan" class="flex gap-2">
                 <input v-model="tinNhanMoi"
-                  class="flex-1 rounded-xl bg-slate-800 border border-slate-700 px-3.5 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:border-brand-500"
+                  class="min-h-11 flex-1 rounded-xl bg-slate-800 border border-slate-700 px-3.5 py-2.5 text-base sm:text-sm text-white placeholder-slate-500 outline-none focus:border-brand-500"
                   placeholder="Nhập tin nhắn..." />
-                <button class="nut-chinh !px-4"><i class="fa-solid fa-paper-plane"></i></button>
+                <button class="nut-chinh min-h-11 min-w-11 !px-4" aria-label="Gửi tin nhắn"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i></button>
               </form>
             </div>
           </div>
@@ -331,6 +358,7 @@
 
 <script>
 import QRCode from 'qrcode'
+import { markRaw } from 'vue'
 import AgoraRTC from 'agora-rtc-sdk-ng'
 import api from '../../utils/axios'
 import { taoEcho } from '../../utils/echo'
@@ -346,6 +374,7 @@ export default {
       tinNhans: [],
       tinNhanMoi: '',
       tabPhong: 'chat',
+      bangMobileMo: false,
       cacTabPhong: [
         { k: 'chat', ten: 'Chat', icon: 'fa-solid fa-comment' },
         { k: 'thanh_vien', ten: 'Thành viên', icon: 'fa-solid fa-users' },
@@ -374,8 +403,11 @@ export default {
       micTrack: null,
       camTrack: null,
       manHinhTrack: null,
-      micBat: true,
-      camBat: true,
+      dangTaoMic: false,
+      kiemTraMicTimer: null,
+      daThuPhatLaiMic: false,
+      micBat: false,
+      camBat: false,
       dangChiaSe: false,
 
       // Bố cục kiểu Zoom
@@ -383,6 +415,9 @@ export default {
       ghimUid: null, // người dùng bị ghim lên khung lớn
       dangNoiUid: null, // ai đang nói (volume-indicator)
       remoteVideo: {}, // uid -> videoTrack của người khác
+      remoteAudio: {}, // uid -> audioTrack của người khác
+      amThanhBiChan: false,
+      amThanhDaMoKhoa: false,
       micTrangThai: {}, // uid -> mic bật/tắt
       localUid: null,
 
@@ -392,6 +427,7 @@ export default {
       dangDongPhien: false,
 
       echo: null,
+      xuLyMoKhoaAmThanh: null,
     }
   },
   computed: {
@@ -434,7 +470,7 @@ export default {
         vaiTro: tv.vai_tro,
         gioTay: !!tv.gio_tay,
         dangChiaSe: !!tv.dang_chia_se,
-        laToi: tv.ma_tai_khoan === this.localUid,
+        laToi: Number(tv.ma_tai_khoan) === Number(this.localUid),
       }))
       if (!ds.some((x) => x.uid === this.localUid)) {
         ds.unshift({
@@ -477,6 +513,13 @@ export default {
     },
   },
   async mounted() {
+    // Trình duyệt có thể cho phép thu mic nhưng vẫn giữ AudioContext phát âm
+    // thanh từ xa ở trạng thái suspended. Mở khóa ngay ở thao tác đầu tiên để
+    // giáo viên nghe được mic được sinh viên publish sau khi được cấp quyền.
+    this.xuLyMoKhoaAmThanh = () => this.moKhoaAmThanh(false)
+    window.addEventListener('pointerdown', this.xuLyMoKhoaAmThanh, { passive: true })
+    window.addEventListener('keydown', this.xuLyMoKhoaAmThanh)
+
     this.localUid = this.auth.user?.id
     const maPhong = this.$route.params.maPhong
     let phienDangMo = null
@@ -504,6 +547,17 @@ export default {
     }, 1000)
   },
   beforeUnmount() {
+    if (this.kiemTraMicTimer) {
+      clearTimeout(this.kiemTraMicTimer)
+      this.kiemTraMicTimer = null
+    }
+    if (this.xuLyMoKhoaAmThanh) {
+      window.removeEventListener('pointerdown', this.xuLyMoKhoaAmThanh)
+      window.removeEventListener('keydown', this.xuLyMoKhoaAmThanh)
+      this.xuLyMoKhoaAmThanh = null
+    }
+    AgoraRTC.onAutoplayFailed = undefined
+    AgoraRTC.onAudioContextStateChanged = undefined
     if (this.dongHoPhong) {
       clearInterval(this.dongHoPhong)
       this.dongHoPhong = null
@@ -518,22 +572,131 @@ export default {
     api.post(`/phong/${this.phong.ma_phong}/roi`).catch(() => {})
   },
   methods: {
+    moBangPhong(tab) {
+      this.tabPhong = tab
+      // Luôn mở trạng thái sheet. CSS lg:* tự giữ sidebar ở desktop, còn mobile
+      // sẽ hiện bottom sheet kể cả khi trình duyệt bật chế độ "Trang web cho máy tính".
+      this.bangMobileMo = true
+    },
+
+    dongBangPhong() {
+      this.bangMobileMo = false
+    },
+
     // ---------- Điều khiển media ----------
     async batTatMic() {
-      if (!this.micTrack) return
       // Sinh viên chưa được cấp quyền thì không tự bật mic được
       if (!this.quyenToi.mac && !this.laGiangVien) {
         alert('Giáo viên chưa cấp quyền dùng micro. Hãy giơ tay để xin quyền.')
         return
       }
-      this.micBat = !this.micBat
-      await this.micTrack.setEnabled(this.micBat)
+
+      // iOS Safari và một số Chrome Android chỉ cho AudioContext chạy khi lời gọi
+      // nằm trực tiếp trong thao tác chạm của người dùng.
+      AgoraRTC.resumeAudioContext()
+
+      if (!this.micTrack) {
+        await this.taoVaPhatMic()
+        return
+      }
+
+      const seBat = !this.micBat
+      try {
+        const mediaTrack = this.micTrack.getMediaStreamTrack?.()
+        if (seBat && mediaTrack?.readyState === 'ended') {
+          await this.giaiPhongMic()
+          await this.taoVaPhatMic()
+          return
+        }
+
+        // setMuted ổn định hơn setEnabled với track đang publish và phát đúng
+        // user-published/user-unpublished cho các máy còn lại.
+        await this.micTrack.setMuted(!seBat)
+        this.micBat = seBat
+      } catch (loi) {
+        this.$toast?.show?.('Không thể thay đổi micro: ' + (loi?.message || ''), { type: 'error', duration: 5000 })
+      }
+    },
+
+    async giaiPhongMic() {
+      if (this.kiemTraMicTimer) {
+        clearTimeout(this.kiemTraMicTimer)
+        this.kiemTraMicTimer = null
+      }
+      this.daThuPhatLaiMic = false
+      const mic = this.micTrack
+      this.micTrack = null
+      this.micBat = false
+      if (!mic) return
+
+      try { await this.agoraClient?.unpublish(mic) } catch {}
+      try { mic.close() } catch {}
+    },
+
+    async moKhoaAmThanh(hienThongBao = false) {
+      const cacTrack = Object.values(this.remoteAudio).filter(Boolean)
+      const tatCaDangPhat = cacTrack.every((track) => track.isPlaying)
+      if (this.amThanhDaMoKhoa && tatCaDangPhat && !hienThongBao) return
+      try {
+        // Không await trước play: Chrome yêu cầu play() nằm trong đúng nhịp xử
+        // lý click/pointerdown. Await ở đây có thể làm mất transient user gesture.
+        const resumePromise = AgoraRTC.resumeAudioContext()
+        cacTrack.forEach((track) => {
+          try {
+            // Khi người dùng bấm nút Âm thanh, tạo lại duy nhất một player cho
+            // từng track. Việc stop trước play tránh âm bị nhân đôi.
+            if (hienThongBao) track.stop()
+            if (hienThongBao || !track.isPlaying) {
+              track.setVolume(100)
+              track.play()
+            }
+          } catch {}
+        })
+
+        await resumePromise
+        // AudioContext vừa chuyển sang running: thử lại các track chưa chạy.
+        cacTrack.forEach((track) => {
+          try {
+            if (!track.isPlaying) track.play()
+          } catch {}
+        })
+        await new Promise((resolve) => setTimeout(resolve, 100))
+
+        const conTrackChuaPhat = cacTrack.some((track) => !track.isPlaying)
+        this.amThanhBiChan = conTrackChuaPhat
+        this.amThanhDaMoKhoa = !conTrackChuaPhat
+        if (hienThongBao) {
+          const thongBao = conTrackChuaPhat
+            ? 'Chưa khởi động được âm thanh nhận vào. Cần kiểm tra kết nối và lỗi phát âm thanh.'
+            : 'Đã khởi động lại âm thanh lớp học.'
+          this.$toast?.show?.(thongBao, { type: conTrackChuaPhat ? 'warning' : 'success', duration: 5000 })
+        }
+      } catch (loi) {
+        this.amThanhBiChan = true
+        this.amThanhDaMoKhoa = false
+        if (hienThongBao) {
+          this.$toast?.show?.('Chưa thể bật âm thanh: ' + (loi?.message || ''), { type: 'warning', duration: 5000 })
+        }
+      }
+    },
+
+    batLaiAmThanh() {
+      return this.moKhoaAmThanh(true)
     },
 
     async batTatCam() {
-      if (!this.camTrack) return
+      if (!this.camTrack) {
+        await this.taoVaPhatCamera()
+        return
+      }
+
       this.camBat = !this.camBat
-      await this.camTrack.setEnabled(this.camBat)
+      try {
+        await this.camTrack.setEnabled(this.camBat)
+      } catch (loi) {
+        this.camBat = !this.camBat
+        this.$toast?.show?.('Không thể thay đổi camera: ' + (loi?.message || ''), { type: 'error', duration: 5000 })
+      }
     },
 
     async batTatChiaSe() {
@@ -559,7 +722,7 @@ export default {
         } else {
           // Bắt đầu chia sẻ: chọn cửa sổ/tab trong trình duyệt
           const manHinh = await AgoraRTC.createScreenVideoTrack()
-          this.manHinhTrack = manHinh
+          this.manHinhTrack = markRaw(manHinh)
           manHinh.on('track-ended', () => {
             this.batTatChiaSe().catch(() => {})
           })
@@ -585,6 +748,9 @@ export default {
     },
 
     async capQuyenCho(tv, { mic, chiaSe }) {
+      // Đây là thao tác trực tiếp của giáo viên. Tận dụng nó để mở khóa audio
+      // playback trước khi sinh viên publish mic ở thời điểm sau đó.
+      this.moKhoaAmThanh(false)
       try {
         await api.post(`/phong/${this.phong.ma_phong}/cap-quyen`, {
           ma_tai_khoan: tv.ma_tai_khoan,
@@ -660,10 +826,141 @@ export default {
       this.giaNhapAgora(this.thongTinAgora)
     },
 
+    async taoVaPhatMic({ thongBaoLoi = true } = {}) {
+      if (!this.agoraClient || this.micTrack || this.dangTaoMic) return this.micTrack
+      if (!this.laGiangVien && !this.quyenToi.mac) return null
+
+      let mic = null
+      this.dangTaoMic = true
+      try {
+        // Điện thoại thường đã tự tăng gain. Tắt AGC của Agora để tránh khuếch đại
+        // kép gây rè/chói; vẫn giữ khử vọng và lọc ồn.
+        const cauHinhMic = {
+          AEC: true,
+          ANS: true,
+          AGC: false,
+          encoderConfig: 'music_standard',
+        }
+
+        try {
+          mic = await AgoraRTC.createMicrophoneAudioTrack(cauHinhMic)
+        } catch (loiTaoMic) {
+          // Một số WebView/điện thoại cũ không nhận đủ media constraints. Chỉ
+          // fallback khi không phải lỗi người dùng từ chối quyền microphone.
+          if (loiTaoMic?.code === 'PERMISSION_DENIED' || loiTaoMic?.name === 'NotAllowedError') throw loiTaoMic
+          mic = await AgoraRTC.createMicrophoneAudioTrack({ encoderConfig: 'music_standard' })
+        }
+
+        const mediaTrack = mic.getMediaStreamTrack?.()
+        if (!mediaTrack || mediaTrack.readyState !== 'live') {
+          throw new Error('Microphone không tạo được audio track đang hoạt động.')
+        }
+
+        // Track mới của Agora mặc định đã bật. Không gán trực tiếp
+        // MediaStreamTrack.enabled và không gọi setMuted(false) ngay sau publish:
+        // hai thao tác đó có thể làm trạng thái SDK và RTCRtpSender lệch nhau khi
+        // sinh viên được cấp quyền giữa lúc đang ở trong phòng.
+        mic.setVolume(100)
+        await this.agoraClient.publish(mic)
+        this.micTrack = markRaw(mic)
+        this.micBat = true
+        this.kiemTraMicDangGui(mic)
+        this.$toast?.show?.('Micro đã được bật. Hãy nói để kiểm tra.', { type: 'success', duration: 3000 })
+        return mic
+      } catch (loi) {
+        try { await this.agoraClient?.unpublish(mic) } catch {}
+        try { mic?.close() } catch {}
+        this.micTrack = null
+        this.micBat = false
+        if (thongBaoLoi) {
+          const thongBao = loi?.code === 'PERMISSION_DENIED'
+            ? 'Trình duyệt đang chặn micro. Hãy cấp quyền Microphone trong cài đặt trang rồi thử lại.'
+            : 'Không bật được micro: ' + (loi?.msg || loi?.message || 'Lỗi không xác định')
+          this.$toast?.show?.(thongBao, { type: 'warning', duration: 7000 })
+        }
+        return null
+      } finally {
+        this.dangTaoMic = false
+      }
+    },
+
+    kiemTraMicDangGui(mic) {
+      if (this.kiemTraMicTimer) clearTimeout(this.kiemTraMicTimer)
+      this.kiemTraMicTimer = setTimeout(async () => {
+        this.kiemTraMicTimer = null
+        if (!this.agoraClient || this.micTrack !== mic || !this.micBat) return
+
+        const thongKe = this.agoraClient.getLocalAudioStats?.() || {}
+        const dangGui = Number(thongKe.sendBytes || 0) > 0 || Number(thongKe.sendBitrate || 0) > 0
+        if (dangGui) return
+
+        // Một số phiên Chrome publish track thứ hai (sau camera) nhưng sender
+        // không bắt đầu truyền. Publish lại đúng một lần để đồng bộ sender.
+        if (!this.daThuPhatLaiMic) {
+          this.daThuPhatLaiMic = true
+          try {
+            await this.agoraClient.unpublish(mic)
+            await this.agoraClient.publish(mic)
+            this.kiemTraMicDangGui(mic)
+            return
+          } catch (loi) {
+            this.$toast?.show?.('Agora chưa gửi được micro: ' + (loi?.message || ''), { type: 'warning', duration: 6000 })
+          }
+        }
+
+        this.$toast?.show?.('Micro đã mở nhưng chưa có dữ liệu âm thanh gửi đi. Hãy kiểm tra thiết bị đầu vào của trình duyệt.', { type: 'warning', duration: 7000 })
+      }, 2500)
+    },
+
+    async taoVaPhatCamera({ thongBaoLoi = true } = {}) {
+      if (!this.agoraClient || this.camTrack) return this.camTrack
+
+      let cam = null
+      try {
+        cam = await AgoraRTC.createCameraVideoTrack({ encoderConfig: '480p_1' })
+        await this.agoraClient.publish(cam)
+        this.camTrack = markRaw(cam)
+        this.camBat = true
+        await this.$nextTick()
+        const oLocal = this.oMedia(this.localUid)
+        if (oLocal) cam.play(oLocal)
+        return cam
+      } catch (loi) {
+        try { cam?.close() } catch {}
+        this.camTrack = null
+        this.camBat = false
+        if (thongBaoLoi) {
+          const thongBao = loi?.code === 'PERMISSION_DENIED'
+            ? 'Trình duyệt đang chặn camera. Micro vẫn có thể hoạt động độc lập.'
+            : 'Không bật được camera: ' + (loi?.msg || loi?.message || 'Lỗi không xác định')
+          this.$toast?.show?.(thongBao, { type: 'warning', duration: 7000 })
+        }
+        return null
+      }
+    },
+
     async giaNhapAgora(t) {
       try {
+        AgoraRTC.onAutoplayFailed = () => {
+          this.amThanhBiChan = true
+          this.amThanhDaMoKhoa = false
+        }
+        AgoraRTC.onAudioContextStateChanged = (trangThai) => {
+          const coAmThanhTuXa = Object.keys(this.remoteAudio).length > 0
+          this.amThanhBiChan = coAmThanhTuXa && trangThai !== 'running'
+          this.amThanhDaMoKhoa = trangThai === 'running'
+
+          if (trangThai === 'running') {
+            Object.values(this.remoteAudio).forEach((track) => {
+              try {
+                if (track && !track.isPlaying) track.play()
+              } catch {}
+            })
+          }
+        }
+
         const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' })
-        this.agoraClient = client
+        this.agoraClient = markRaw(client)
 
         // Bật chỉ báo âm lượng để biết ai đang nói (viền xanh + tự chuyển khung lớn)
         client.enableAudioVolumeIndicator()
@@ -671,7 +968,7 @@ export default {
         client.on('user-published', async (user, mediaType) => {
           await client.subscribe(user, mediaType)
           if (mediaType === 'video') {
-            this.remoteVideo = { ...this.remoteVideo, [Number(user.uid)]: user.videoTrack }
+            this.remoteVideo = { ...this.remoteVideo, [Number(user.uid)]: markRaw(user.videoTrack) }
             await this.$nextTick()
             let o = this.oMedia(user.uid)
             // Thành viên mới vào mà danh sách chưa có ô → tải lại rồi phát
@@ -683,8 +980,26 @@ export default {
             if (o) user.videoTrack.play(o)
           }
           if (mediaType === 'audio') {
-            user.audioTrack.play()
-            this.micTrangThai = { ...this.micTrangThai, [Number(user.uid)]: true }
+            const uid = Number(user.uid)
+            const trackCu = this.remoteAudio[uid]
+            // Luôn dừng player cũ trước khi phát lại. Trường hợp sinh viên
+            // unpublish/publish lại có thể trả về cùng một RemoteAudioTrack;
+            // bỏ qua play khi object giống nhau sẽ khiến phía giáo viên im tiếng.
+            if (trackCu) {
+              try { trackCu.stop() } catch {}
+            }
+            this.remoteAudio = { ...this.remoteAudio, [uid]: markRaw(user.audioTrack) }
+            try {
+              await AgoraRTC.resumeAudioContext()
+              user.audioTrack.setVolume(100)
+              user.audioTrack.play()
+              this.amThanhBiChan = !user.audioTrack.isPlaying
+              this.amThanhDaMoKhoa = user.audioTrack.isPlaying
+            } catch {
+              this.amThanhBiChan = true
+              this.amThanhDaMoKhoa = false
+            }
+            this.micTrangThai = { ...this.micTrangThai, [uid]: true }
           }
         })
 
@@ -696,7 +1011,12 @@ export default {
             this.remoteVideo = rv
           }
           if (mediaType === 'audio') {
-            this.micTrangThai = { ...this.micTrangThai, [Number(user.uid)]: false }
+            const uid = Number(user.uid)
+            try { this.remoteAudio[uid]?.stop() } catch {}
+            const ra = { ...this.remoteAudio }
+            delete ra[uid]
+            this.remoteAudio = ra
+            this.micTrangThai = { ...this.micTrangThai, [uid]: false }
           }
         })
 
@@ -704,6 +1024,10 @@ export default {
           const rv = { ...this.remoteVideo }
           delete rv[Number(user.uid)]
           this.remoteVideo = rv
+          try { this.remoteAudio[Number(user.uid)]?.stop() } catch {}
+          const ra = { ...this.remoteAudio }
+          delete ra[Number(user.uid)]
+          this.remoteAudio = ra
           const ms = { ...this.micTrangThai }
           delete ms[Number(user.uid)]
           this.micTrangThai = ms
@@ -717,32 +1041,24 @@ export default {
             if (v.level > 10 && (!toNhat || v.level > toNhat.level)) toNhat = v
           }
           this.dangNoiUid = toNhat ? Number(toNhat.uid) : null
+          if (toNhat && Number(toNhat.uid) !== Number(this.localUid)) {
+            const trackDangNoi = this.remoteAudio[Number(toNhat.uid)]
+            if (trackDangNoi && !trackDangNoi.isPlaying) {
+              this.amThanhBiChan = true
+              this.amThanhDaMoKhoa = false
+            }
+          }
         })
 
         await client.join(t.app_id, t.kenh, t.token, this.localUid)
 
-        try {
-          const [mic, cam] = await AgoraRTC.createMicrophoneAndCameraTracks()
-          this.micTrack = mic
-          this.camTrack = cam
-          await this.$nextTick()
-          const oLocal = this.oMedia(this.localUid)
-          if (oLocal) cam.play(oLocal)
-          // Publish khi track còn bật — tắt mic SAU khi publish
-          // (Agora không cho publish track đã disable → TRACK_IS_DISABLED)
-          await client.publish([mic, cam])
-
-          // Sinh viên chưa được cấp quyền mic → vào phòng ở trạng thái tắt tiếng
-          if (!this.quyenToi.mac && !this.laGiangVien) {
-            this.micBat = false
-            await mic.setEnabled(false)
-          }
-        } catch (loi) {
-          // Thiếu camera/mic hoặc lỗi publish — vẫn ở lại phòng để nghe & xem người khác
-          this.camBat = false
-          this.micBat = false
-          this.$toast?.show?.('Không bật được camera/mic của bạn: ' + (loi?.msg || loi?.message || ''), { type: 'warning', duration: 6000 })
+        // Trên thiết bị cảm ứng, đợi người dùng bấm nút Mic để getUserMedia chạy
+        // trực tiếp trong thao tác người dùng. Cách này ổn định hơn trên iOS/Android.
+        const laThietBiCamUng = window.matchMedia?.('(pointer: coarse)').matches
+        if (!laThietBiCamUng && (this.laGiangVien || this.quyenToi.mac)) {
+          await this.taoVaPhatMic()
         }
+        await this.taoVaPhatCamera()
       } catch (loi) {
         const msg =
           loi?.msg ||
@@ -757,6 +1073,9 @@ export default {
 
     roiAgora() {
       try {
+        Object.values(this.remoteAudio).forEach((track) => {
+          try { track?.stop() } catch {}
+        })
         this.manHinhTrack?.close()
         this.camTrack?.close()
         this.micTrack?.close()
@@ -768,6 +1087,11 @@ export default {
       this.camTrack = null
       this.micTrack = null
       this.agoraClient = null
+      this.remoteAudio = {}
+      this.remoteVideo = {}
+      this.amThanhBiChan = false
+      this.amThanhDaMoKhoa = false
+      AgoraRTC.onAutoplayFailed = undefined
     },
 
     // ---------- Realtime WebSocket ----------
@@ -783,7 +1107,7 @@ export default {
           this.capNhatQrTuRealtime(e)
         })
         .listen('.diem.danh.thanh.cong', async (e) => {
-          if (!this.laGiangVien && this.maSinhVienCuaToi === e.ma_sinh_vien) {
+          if (!this.laGiangVien && Number(this.maSinhVienCuaToi) === Number(e.ma_sinh_vien)) {
             this.daDiemDanhToi = true
             this.trangThaiDiemDanhToi = 'co_mat'
             this.hienQr = false
@@ -802,30 +1126,42 @@ export default {
           this.$nextTick(() => this.$refs.khungChat?.scrollTo(0, this.$refs.khungChat.scrollHeight))
         })
         .listen('.chia.se.man.hinh', (e) => {
-          const tv = this.thanhVien.find((t) => t.ma_tai_khoan === e.ma_tai_khoan)
+          const tv = this.thanhVien.find((t) => Number(t.ma_tai_khoan) === Number(e.ma_tai_khoan))
           if (tv) tv.dang_chia_se = e.dang_chia_se
-          if (e.ma_tai_khoan === this.localUid) this.dangChiaSe = e.dang_chia_se
+          if (Number(e.ma_tai_khoan) === Number(this.localUid)) this.dangChiaSe = e.dang_chia_se
         })
         .listen('.sinh.vien.gio.tay', (e) => {
-          const tv = this.thanhVien.find((t) => t.ma_tai_khoan === e.ma_tai_khoan)
+          const tv = this.thanhVien.find((t) => Number(t.ma_tai_khoan) === Number(e.ma_tai_khoan))
           if (tv) tv.gio_tay = e.dang_gio
-          if (e.ma_tai_khoan === this.auth.user?.id) this.quyenToi.gio_tay = e.dang_gio
+          if (Number(e.ma_tai_khoan) === Number(this.auth.user?.id)) this.quyenToi.gio_tay = e.dang_gio
         })
         .listen('.cap.quyen.phong', async (e) => {
-          const tv = this.thanhVien.find((t) => t.ma_tai_khoan === e.ma_tai_khoan)
+          const tv = this.thanhVien.find((t) => Number(t.ma_tai_khoan) === Number(e.ma_tai_khoan))
           if (tv) {
             tv.duoc_phep_mac = e.duoc_phep_mac
             tv.duoc_phep_chia_se = e.duoc_phep_chia_se
             if (e.duoc_phep_mac || e.duoc_phep_chia_se) tv.gio_tay = false
           }
 
-          if (e.ma_tai_khoan === this.auth.user?.id) {
+          if (Number(e.ma_tai_khoan) === Number(this.auth.user?.id)) {
+            const truocDoDuocPhepMic = this.quyenToi.mac
             this.quyenToi.mac = e.duoc_phep_mac
             this.quyenToi.chia_se = e.duoc_phep_chia_se
 
-            if (!e.duoc_phep_mac && this.micBat && this.micTrack) {
-              this.micBat = false
-              await this.micTrack.setEnabled(false)
+            if (!e.duoc_phep_mac && this.micTrack) {
+              // Bỏ hẳn track để lần cấp quyền sau nút Mic tạo và publish track mới,
+              // tránh trạng thái muted cũ bị kẹt trên Safari/Chrome mobile.
+              await this.giaiPhongMic()
+            }
+            if (e.duoc_phep_mac && !truocDoDuocPhepMic) {
+              const laThietBiCamUng = window.matchMedia?.('(pointer: coarse)').matches
+              if (!laThietBiCamUng && !this.micTrack) {
+                // Trên desktop, tạo/publish ngay để luồng được cấp quyền giữa
+                // phiên giống hệt trường hợp tải lại trang với quyền đã có.
+                await this.taoVaPhatMic()
+              } else {
+                this.$toast?.show?.('Giáo viên đã cấp quyền micro. Nhấn nút Mic để bắt đầu nói.', { type: 'success', duration: 5000 })
+              }
             }
             if (!e.duoc_phep_chia_se && this.dangChiaSe) {
               await this.batTatChiaSe()
@@ -1049,7 +1385,7 @@ export default {
       const { data } = await api.get(`/phong/${this.phong.ma_phong}/tin-nhan`)
       this.tinNhans = data.danh_sach.map((t) => ({
         ...t,
-        vai_tro: this.thanhVien.find((v) => v.ma_tai_khoan === t.ma_tai_khoan)?.vai_tro,
+        vai_tro: this.thanhVien.find((v) => Number(v.ma_tai_khoan) === Number(t.ma_tai_khoan))?.vai_tro,
       }))
       this.$nextTick(() => this.$refs.khungChat?.scrollTo(0, this.$refs.khungChat.scrollHeight))
     },
