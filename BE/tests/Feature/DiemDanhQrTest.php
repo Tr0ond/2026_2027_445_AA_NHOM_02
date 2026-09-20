@@ -7,6 +7,7 @@ use App\Events\MaQrDiemDanhCapNhat;
 use App\Events\PhienDiemDanhDong;
 use App\Events\PhienDiemDanhMo;
 use App\Events\ThongBaoMoi;
+use App\Events\TrangThaiDiemDanhCapNhat;
 use App\Models\ChiTietDiemDanh;
 use App\Models\DangKyLopHoc;
 use App\Models\GiangVien;
@@ -19,6 +20,7 @@ use App\Models\PhienDiemDanh;
 use App\Models\PhongHocTrucTuyen;
 use App\Models\SinhVien;
 use App\Models\User;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
@@ -107,6 +109,33 @@ class DiemDanhQrTest extends TestCase
         $this->travelBack();
 
         parent::tearDown();
+    }
+
+    public function test_cac_su_kien_diem_danh_duoc_phat_ngay(): void
+    {
+        $events = [
+            new PhienDiemDanhMo(
+                'PHONG-QR-TEST',
+                'PHIEN-QR-TEST',
+                'https://example.test/qr',
+                now()->addSeconds(15)->toIso8601String(),
+                now()->toIso8601String(),
+                now()->addMinutes(5)->toIso8601String(),
+                300,
+            ),
+            new MaQrDiemDanhCapNhat(
+                'PHONG-QR-TEST',
+                'PHIEN-QR-TEST',
+                'https://example.test/qr',
+                now()->addSeconds(15)->toIso8601String(),
+            ),
+            new DiemDanhThanhCong('PHONG-QR-TEST', 1, 'SV001', 'Sinh vien test', '08:00'),
+            new TrangThaiDiemDanhCapNhat('PHONG-QR-TEST', 1, 'co_mat'),
+        ];
+
+        foreach ($events as $event) {
+            $this->assertInstanceOf(ShouldBroadcastNow::class, $event);
+        }
     }
 
     public function test_mo_phien_tao_qr_hieu_luc_15_giay_va_phat_su_kien(): void
